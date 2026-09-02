@@ -44,8 +44,10 @@ export interface NoteBody {
   html: string;
   /** Plain text of the page, for excerpts and search. */
   text: string;
-  /** How many pictures the page holds. */
+  /** How many pictures sit inline in the text. */
   images: number;
+  /** Pictures pinned to the page's boards, as data URLs. */
+  gallery: string[];
   updatedAt: number;
 }
 

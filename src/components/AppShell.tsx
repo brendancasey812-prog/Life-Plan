@@ -2,14 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { CalendarRange, Compass, NotebookPen, Settings, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  CalendarDays,
+  CalendarRange,
+  Compass,
+  NotebookPen,
+  Settings,
+  Sparkles,
+  Target,
+} from "lucide-react";
+import { MONTHS } from "@/lib/seed";
+import { useHydrated } from "@/lib/hydrated";
 import { SettingsPanel } from "./SettingsPanel";
 
 const nav = [
   { href: "/", label: "My Life", icon: Sparkles },
   { href: "/weeks", label: "Weeks", icon: CalendarRange },
   { href: "/map", label: "Life Map", icon: Compass },
+  { href: "/year", label: "Yearly Goals", icon: Target },
+  { href: "/month", label: "Monthly Goals", icon: CalendarDays },
   { href: "/notes", label: "Notes", icon: NotebookPen },
 ];
 
@@ -19,28 +31,46 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // trailingSlash: true means routes arrive as "/weeks/".
   const current = pathname.replace(/\/+$/, "") || "/";
 
+  // The goal tabs are dated, and the date is only knowable in the browser —
+  // this is a static site, so a build-time date would go stale on the shelf.
+  const hydrated = useHydrated();
+  const dated = useMemo(() => {
+    if (!hydrated) return {} as Record<string, string>;
+    const now = new Date();
+    return {
+      "/year": `${now.getFullYear()}`,
+      "/month": `${MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+    };
+  }, [hydrated]);
+
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex shrink-0 items-center gap-4 border-b border-white/[0.07] px-4 py-3 backdrop-blur-xl sm:px-6">
-        <span className="hidden text-sm font-semibold tracking-tight text-zinc-300 sm:block">
+      <header className="flex shrink-0 items-center gap-3 border-b border-white/[0.07] px-3 py-3 backdrop-blur-xl sm:px-5">
+        <span className="hidden shrink-0 text-sm font-semibold tracking-tight text-zinc-300 xl:block">
           Life&nbsp;Plan
         </span>
 
-        <nav className="flex flex-1 items-center gap-1.5">
+        <nav className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {nav.map(({ href, label, icon: Icon }) => {
             const active = current === href;
+            const suffix = dated[href];
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
                   active
                     ? "bg-indigo-500/20 text-indigo-200"
                     : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100"
                 }`}
               >
-                <Icon size={16} />
+                <Icon size={16} className="shrink-0" />
                 {label}
+                {suffix && (
+                  <span className={active ? "text-indigo-300/80" : "text-zinc-500"}>
+                    — {suffix}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -50,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <button
           onClick={() => setShowSettings(true)}
           aria-label="Settings"
-          className="rounded-xl border border-white/10 bg-white/[0.04] p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white"
+          className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white"
         >
           <Settings size={17} />
         </button>

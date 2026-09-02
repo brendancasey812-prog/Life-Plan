@@ -14,6 +14,8 @@ network call; export a JSON copy from **Settings** to move it.
 | **My Life** | One `My Life` bubble. Open it for every decade, a decade for its years, a year for its months — and add your own bubbles at any depth. |
 | **Weeks** | Rows are ages 0 – 100, columns are the 52 weeks of each year. Click any week to write down what it is for and tick it off. |
 | **Life Map** | The areas the plan is built around: Personal Health (mental, physical, sexual), Outdoors (camping and hiking, biking, eco footprint), Music, Finance and Craftmanship. |
+| **Yearly Goals — 2026** | A notepad for this year, with picture boxes beside it. |
+| **Monthly Goals — September 2026** | The same, for this month. |
 | **Notes** | Every page in one place — the ones hanging off bubbles and weeks, plus any you start on their own — searchable across their whole text. |
 
 A settings box sits in the top-right corner of every tab: your name, date of
@@ -54,6 +56,19 @@ and months in **My Life** are created the first time you open their parent
 ([`openBubble`](src/lib/store.ts)). After that they are ordinary bubbles: rename
 them, delete them, add siblings.
 
+## The goal tabs
+
+**Yearly Goals** and **Monthly Goals** are not a second copy of anything. Each
+one opens the page behind the matching bubble in **My Life** — this year's tab
+is the `Age 25` bubble, this month's is the `September` bubble under it — so
+writing in either place shows up in the other, pictures included. The chip in
+the header names the bubble it is attached to.
+
+Both dates come from the clock in your browser, not from the build, so the tabs
+follow the calendar rather than going stale. My Life's timeline is generated as
+it is opened, so a tab builds whatever part of it the period needs on first
+visit.
+
 ## Notes
 
 Every bubble and every week cell has a page behind it, and the **Notes** tab
@@ -63,8 +78,12 @@ document, not a text box:
 - **Formatting** — headings, bold / italic / underline / strikethrough,
   highlight, links, quotes, code blocks, dividers.
 - **Lists** — bulleted, numbered, and checklists whose boxes you can tick.
-- **Pictures** — paste a screenshot straight in, drag a file onto the page, or
-  pick one; then size it small, medium or full width, or delete it.
+- **Pictures** — paste a screenshot straight into the text, drag a file onto
+  the page, or pick one; then size it small, medium or full width, or delete
+  it.
+- **Picture boxes** — a page also has a board of picture boxes beside it,
+  which take a click, a drop or a paste. They belong to the page, so the ones
+  pinned on a goal tab are there on the bubble too.
 
 Pages save themselves as you type. The **Notes** tab searches every page's full
 text, so a note written on a month bubble two years out is still findable.

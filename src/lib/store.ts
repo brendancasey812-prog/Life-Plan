@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { findTimeline } from "./goals";
 import { bubbleNoteKey, excerptOf, weekNoteKey, writeNote } from "./notes";
 import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
 import type { Bubble, NoteMeta, Page, PlanState, Settings, Tree, TreeId, WeekEntry } from "./types";
@@ -21,6 +22,11 @@ interface Actions {
   /** Deletes the bubble and its descendants, returning their note keys. */
   deleteBubble: (tree: TreeId, id: string) => string[];
   setWeekDone: (age: number, week: number, done: boolean) => void;
+  /**
+   * Generates whatever of the My Life timeline a period needs, so the goal
+   * tabs and the bubbles are looking at exactly the same page.
+   */
+  resolveTimeline: (age: number, month?: number) => void;
   addPage: (title: string) => string;
   renamePage: (id: string, title: string) => void;
   deletePage: (id: string) => void;
@@ -214,6 +220,30 @@ export const usePlan = create<PlanStore>()(
         });
       },
 
+      resolveTimeline: (age, month) => {
+        if (age < 0 || age > get().settings.lifespan) return;
+        // Each step opens the level above before looking inside it; a level
+        // whose bubbles were deleted stays empty and the page says so.
+        get().openBubble("life", get().trees.life.rootId);
+        const found = () => findTimeline(get().trees.life, age, month);
+        const decadeOrYear = found();
+        if (decadeOrYear.complete) return;
+
+        const tree = get().trees.life;
+        const root = tree.nodes[tree.rootId];
+        const decade = root.childIds
+          .map((id) => tree.nodes[id])
+          .find(
+            (n) => n?.ageFrom !== undefined && age >= n.ageFrom && age <= (n.ageTo ?? n.ageFrom),
+          );
+        if (!decade) return;
+        get().openBubble("life", decade.id);
+
+        const withYear = found();
+        if (!withYear.yearId || month === undefined) return;
+        get().openBubble("life", withYear.yearId);
+      },
+
       addPage: (title) => {
         const page: Page = { id: newId("p"), title, createdAt: Date.now() };
         set((s) => ({ pages: [page, ...s.pages] }));
@@ -268,7 +298,9 @@ export const usePlan = create<PlanStore>()(
             .split(/\n{2,}/)
             .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
             .join("");
-          writes.push(writeNote(key, { html, text, images: 0, updatedAt: Date.now() }));
+          writes.push(
+            writeNote(key, { html, text, images: 0, gallery: [], updatedAt: Date.now() }),
+          );
         };
 
         for (const treeId of ["life", "map"] as TreeId[]) {

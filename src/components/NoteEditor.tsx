@@ -32,7 +32,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { imageFilesFrom, toStoredImage } from "@/lib/image";
-import { EMPTY_NOTE, excerptOf, isEmptyNote, readNote, writeNote } from "@/lib/notes";
+import { EMPTY_NOTE, metaOf, readNote, updateNote } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
 import type { NoteBody } from "@/lib/types";
 
@@ -133,19 +133,12 @@ function Surface({
       editor.state.doc.descendants((node) => {
         if (node.type.name === "image") images++;
       });
-      const body: NoteBody = {
-        html: editor.getHTML(),
-        text: editor.getText(),
-        images,
-        updatedAt: Date.now(),
-      };
-      const empty = isEmptyNote(body);
-      setNoteMeta(
-        noteKey,
-        empty ? null : { excerpt: excerptOf(body.text), images, updatedAt: body.updatedAt },
-      );
-      void writeNote(noteKey, body)
-        .then(() => setSaveState("saved"))
+      // Merged rather than overwritten, so the page's picture boxes survive.
+      void updateNote(noteKey, { html: editor.getHTML(), text: editor.getText(), images })
+        .then((body) => {
+          setNoteMeta(noteKey, metaOf(body));
+          setSaveState("saved");
+        })
         .catch(() => setSaveState("idle"));
     },
     [noteKey, setNoteMeta, setSaveState],
@@ -219,163 +212,167 @@ function Surface({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap items-center gap-1 border-b border-white/[0.07] px-3 py-2">
-        <Tool
-          on={editor.isActive("bold")}
-          label="Bold"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-        >
-          <Bold size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("italic")}
-          label="Italic"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        >
-          <Italic size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("underline")}
-          label="Underline"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-        >
-          <UnderlineIcon size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("strike")}
-          label="Strikethrough"
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-        >
-          <Strikethrough size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("highlight")}
-          label="Highlight"
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
-        >
-          <Highlighter size={15} />
-        </Tool>
+      <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.07] px-3 py-2">
+        {/* One row that scrolls, rather than a block that reflows and shoves
+            the save state onto a line of its own in a narrow column. */}
+        <div className="flex flex-1 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Tool
+            on={editor.isActive("bold")}
+            label="Bold"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            <Bold size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("italic")}
+            label="Italic"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <Italic size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("underline")}
+            label="Underline"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+          >
+            <UnderlineIcon size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("strike")}
+            label="Strikethrough"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <Strikethrough size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("highlight")}
+            label="Highlight"
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+          >
+            <Highlighter size={15} />
+          </Tool>
 
-        <Divider />
+          <Divider />
 
-        <Tool
-          on={editor.isActive("heading", { level: 1 })}
-          label="Heading"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        >
-          <Heading1 size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("heading", { level: 2 })}
-          label="Subheading"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        >
-          <Heading2 size={15} />
-        </Tool>
+          <Tool
+            on={editor.isActive("heading", { level: 1 })}
+            label="Heading"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          >
+            <Heading1 size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("heading", { level: 2 })}
+            label="Subheading"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          >
+            <Heading2 size={15} />
+          </Tool>
 
-        <Divider />
+          <Divider />
 
-        <Tool
-          on={editor.isActive("bulletList")}
-          label="Bulleted list"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        >
-          <List size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("orderedList")}
-          label="Numbered list"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        >
-          <ListOrdered size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("taskList")}
-          label="Checklist"
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-        >
-          <CheckSquare size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("blockquote")}
-          label="Quote"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        >
-          <Quote size={15} />
-        </Tool>
-        <Tool
-          on={editor.isActive("codeBlock")}
-          label="Code"
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        >
-          <Code size={15} />
-        </Tool>
-        <Tool label="Divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
-          <Minus size={15} />
-        </Tool>
+          <Tool
+            on={editor.isActive("bulletList")}
+            label="Bulleted list"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            <List size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("orderedList")}
+            label="Numbered list"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          >
+            <ListOrdered size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("taskList")}
+            label="Checklist"
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+          >
+            <CheckSquare size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("blockquote")}
+            label="Quote"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          >
+            <Quote size={15} />
+          </Tool>
+          <Tool
+            on={editor.isActive("codeBlock")}
+            label="Code"
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          >
+            <Code size={15} />
+          </Tool>
+          <Tool label="Divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+            <Minus size={15} />
+          </Tool>
 
-        <Divider />
+          <Divider />
 
-        <Tool
-          on={editor.isActive("link")}
-          label="Link"
-          onClick={() => {
-            const previous = editor.getAttributes("link").href as string | undefined;
-            const href = window.prompt("Link address", previous ?? "https://");
-            if (href === null) return;
-            if (!href.trim()) editor.chain().focus().unsetLink().run();
-            else editor.chain().focus().setLink({ href: href.trim() }).run();
-          }}
-        >
-          <Link2 size={15} />
-        </Tool>
-        <Tool label="Add a picture" onClick={() => fileRef.current?.click()}>
-          <ImagePlus size={15} />
-        </Tool>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            void insertImages([...(e.target.files ?? [])]);
-            e.target.value = "";
-          }}
-        />
+          <Tool
+            on={editor.isActive("link")}
+            label="Link"
+            onClick={() => {
+              const previous = editor.getAttributes("link").href as string | undefined;
+              const href = window.prompt("Link address", previous ?? "https://");
+              if (href === null) return;
+              if (!href.trim()) editor.chain().focus().unsetLink().run();
+              else editor.chain().focus().setLink({ href: href.trim() }).run();
+            }}
+          >
+            <Link2 size={15} />
+          </Tool>
+          <Tool label="Add a picture" onClick={() => fileRef.current?.click()}>
+            <ImagePlus size={15} />
+          </Tool>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              void insertImages([...(e.target.files ?? [])]);
+              e.target.value = "";
+            }}
+          />
 
-        <Divider />
+          <Divider />
 
-        <Tool label="Undo" onClick={() => editor.chain().focus().undo().run()}>
-          <Undo2 size={15} />
-        </Tool>
-        <Tool label="Redo" onClick={() => editor.chain().focus().redo().run()}>
-          <Redo2 size={15} />
-        </Tool>
+          <Tool label="Undo" onClick={() => editor.chain().focus().undo().run()}>
+            <Undo2 size={15} />
+          </Tool>
+          <Tool label="Redo" onClick={() => editor.chain().focus().redo().run()}>
+            <Redo2 size={15} />
+          </Tool>
 
-        {imageSelected && (
-          <>
-            <Divider />
-            <span className="pl-1 text-xs text-zinc-500">Picture</span>
-            <Tool label="Small picture" onClick={() => setWidth("40%")}>
-              <span className="text-xs">S</span>
-            </Tool>
-            <Tool label="Medium picture" onClick={() => setWidth("70%")}>
-              <span className="text-xs">M</span>
-            </Tool>
-            <Tool label="Full-width picture" onClick={() => setWidth(null)}>
-              <Maximize2 size={14} />
-            </Tool>
-            <Tool
-              label="Remove picture"
-              onClick={() => editor.chain().focus().deleteSelection().run()}
-            >
-              <Trash2 size={14} />
-            </Tool>
-          </>
-        )}
+          {imageSelected && (
+            <>
+              <Divider />
+              <span className="pl-1 text-xs text-zinc-500">Picture</span>
+              <Tool label="Small picture" onClick={() => setWidth("40%")}>
+                <span className="text-xs">S</span>
+              </Tool>
+              <Tool label="Medium picture" onClick={() => setWidth("70%")}>
+                <span className="text-xs">M</span>
+              </Tool>
+              <Tool label="Full-width picture" onClick={() => setWidth(null)}>
+                <Maximize2 size={14} />
+              </Tool>
+              <Tool
+                label="Remove picture"
+                onClick={() => editor.chain().focus().deleteSelection().run()}
+              >
+                <Trash2 size={14} />
+              </Tool>
+            </>
+          )}
+        </div>
 
-        <span className="ml-auto flex items-center gap-1.5 pl-2 text-xs text-zinc-500">
+        <span className="flex shrink-0 items-center gap-1.5 text-xs text-zinc-500">
           {saveState === "saving" && <Loader2 className="animate-spin" size={13} />}
           {saveState === "saved" && <Check size={13} />}
           {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : ""}

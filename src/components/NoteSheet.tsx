@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, X } from "lucide-react";
+import { ImageIcon, Trash2, X } from "lucide-react";
 import { NoteEditor } from "./NoteEditor";
+import { NoteGallery } from "./NoteGallery";
 
 /**
  * A note page opened over whatever you were looking at — a bubble, a week or
@@ -73,7 +74,17 @@ export function NoteSheet({
           </button>
         </header>
 
-        <NoteEditor noteKey={noteKey} placeholder={placeholder} />
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          <NoteEditor noteKey={noteKey} placeholder={placeholder} />
+
+          {/* The same picture boxes the goal tabs show, on the same page. */}
+          <aside className="shrink-0 overflow-y-auto border-t border-white/[0.07] px-5 py-4 sm:px-8 lg:w-72 lg:border-t-0 lg:border-l lg:px-5">
+            <h3 className="flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-zinc-400 uppercase">
+              <ImageIcon size={13} className="text-indigo-300" /> Pictures
+            </h3>
+            <NoteGallery noteKey={noteKey} cols={1} className="mt-3" />
+          </aside>
+        </div>
 
         {confirmDelete && onDelete && (
           <div className="absolute inset-x-0 bottom-6 mx-auto w-[min(26rem,90%)] rounded-xl border border-white/10 bg-[#11131c] p-4 shadow-2xl">
