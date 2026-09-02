@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: dark;
+  --bg: #07080d;
+  --panel: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --foreground: #e8e9f0;
+  --muted: #9ba1b2;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1100px 640px at 8% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
+    radial-gradient(950px 560px at 100% 0%, rgba(168, 85, 247, 0.11), transparent 55%),
+    radial-gradient(900px 900px at 85% 110%, rgba(56, 189, 248, 0.08), transparent 60%), var(--bg);
+  background-attachment: fixed;
+}
+
+/* Bubbles animate to their new size and position whenever the layout re-solves
+   — after an add, a delete, a drill-in or a window resize. */
+@media (prefers-reduced-motion: no-preference) {
+  .bubble {
+    transition:
+      left 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      top 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      height 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 200ms ease;
+  }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+input,
+textarea {
+  font: inherit;
+}
