@@ -1,10 +1,11 @@
 # 🫧 Life Plan
 
 A whole life, laid out as bubbles you can open, rename, add to and delete —
-plus a 100-year week grid to plan against.
+plus a 100-year week grid to plan against, and a notebook where every bubble
+and every week gets its own page for writing, screenshots and pictures.
 
-Everything lives in your browser's local storage. There is no account, no
-server and no network call; export a JSON copy from **Settings** to move it.
+Everything lives in your browser. There is no account, no server and no
+network call; export a JSON copy from **Settings** to move it.
 
 ## Tabs
 
@@ -13,6 +14,7 @@ server and no network call; export a JSON copy from **Settings** to move it.
 | **My Life** | One `My Life` bubble. Open it for every decade, a decade for its years, a year for its months — and add your own bubbles at any depth. |
 | **Weeks** | Rows are ages 0 – 100, columns are the 52 weeks of each year. Click any week to write down what it is for and tick it off. |
 | **Life Map** | The areas the plan is built around: Personal Health (mental, physical, sexual), Outdoors (camping and hiking, biking, eco footprint), Music, Finance and Craftmanship. |
+| **Notes** | Every page in one place — the ones hanging off bubbles and weeks, plus any you start on their own — searchable across their whole text. |
 
 A settings box sits in the top-right corner of every tab: your name, date of
 birth, how far to plan, and export / import / reset.
@@ -26,8 +28,8 @@ Every bubble behaves the same way, whichever tab it is on:
   simply joins it.
 - **Rename** or **delete** one — hover a bubble for its ✎ and 🗑 buttons.
   Deleting takes everything inside it, after a confirm.
-- **Note** on it — the strip under the canvas holds free text for whatever
-  bubble you are currently inside.
+- **Write** on it — the strip under the canvas opens a full note page for
+  whichever bubble you are inside, and a dot on a bubble means it has one.
 
 ### The layout re-solves itself
 
@@ -52,11 +54,45 @@ and months in **My Life** are created the first time you open their parent
 ([`openBubble`](src/lib/store.ts)). After that they are ordinary bubbles: rename
 them, delete them, add siblings.
 
+## Notes
+
+Every bubble and every week cell has a page behind it, and the **Notes** tab
+lists them all alongside pages you start on their own. A page is a rich
+document, not a text box:
+
+- **Formatting** — headings, bold / italic / underline / strikethrough,
+  highlight, links, quotes, code blocks, dividers.
+- **Lists** — bulleted, numbered, and checklists whose boxes you can tick.
+- **Pictures** — paste a screenshot straight in, drag a file onto the page, or
+  pick one; then size it small, medium or full width, or delete it.
+
+Pages save themselves as you type. The **Notes** tab searches every page's full
+text, so a note written on a month bubble two years out is still findable.
+
+### Where it all goes
+
+Pasted screenshots are far too big for local storage's few megabytes, so the
+two are split:
+
+| What | Where |
+| --- | --- |
+| Settings, bubble trees, week grid, page list, one excerpt per page | `localStorage` (`life-plan-v1`) |
+| Note bodies — the HTML and the pictures inside it | IndexedDB (`life-plan-notes`) |
+
+That excerpt is what draws the note dots, the preview strips and the search
+results without ever loading a page's pictures.
+[`src/lib/image.ts`](src/lib/image.ts) scales anything oversized down to
+1600px and re-encodes it, so a clipboard screenshot costs kilobytes rather
+than megabytes. Export writes both halves into one JSON file; import puts them
+back.
+
 ## Data
 
 One store — [`src/lib/store.ts`](src/lib/store.ts) — holds the settings, both
-bubble trees and the week grid, persisted to local storage under `life-plan-v1`.
+bubble trees, the week grid and the note index, persisted under `life-plan-v1`.
 Week cells are keyed `age:week` and empty ones are dropped rather than stored.
+A plan saved before the editor existed is migrated on load: each old plain-text
+note becomes a page.
 
 ## Running it
 
@@ -80,4 +116,4 @@ no env vars at all.
 ## Stack
 
 Next.js 16 (App Router, static export) · React 19 · TypeScript · Tailwind CSS 4
-· Zustand · lucide-react.
+· Zustand · Tiptap · lucide-react.

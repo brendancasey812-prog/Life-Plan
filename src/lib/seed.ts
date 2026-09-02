@@ -26,7 +26,6 @@ export function makeBubble(b: Partial<Bubble> & { label: string }): Bubble {
     label: b.label,
     parentId: b.parentId ?? null,
     childIds: b.childIds ?? [],
-    note: b.note ?? "",
     hue: b.hue ?? 210,
     seeded: b.seeded,
     generate: b.generate,

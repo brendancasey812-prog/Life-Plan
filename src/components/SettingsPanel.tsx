@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { Download, RotateCcw, Upload, X } from "lucide-react";
-import { exportPlan, parsePlan, usePlan } from "@/lib/store";
+import { allNotes, clearAllNotes, restoreNotes } from "@/lib/notes";
+import { parsePlan, usePlan } from "@/lib/store";
+import type { NoteBody } from "@/lib/types";
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const settings = usePlan((s) => s.settings);
@@ -11,17 +13,25 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const resetAll = usePlan((s) => s.resetAll);
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
-  function download() {
-    const state = usePlan.getState();
-    const blob = new Blob([exportPlan(state)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "life-plan.json";
-    a.click();
-    URL.revokeObjectURL(url);
+  /** One file holds the plan and every note page, pictures included. */
+  async function download() {
+    setBusy(true);
+    try {
+      const { settings, trees, weeks, pages, notes } = usePlan.getState();
+      const noteBodies = await allNotes().catch(() => ({}));
+      const json = JSON.stringify({ settings, trees, weeks, pages, notes, noteBodies }, null, 2);
+      const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "life-plan.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function upload(file: File) {
@@ -31,7 +41,15 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
       return;
     }
     setError("");
-    replaceAll(parsed);
+    setBusy(true);
+    try {
+      const { noteBodies, ...state } = parsed;
+      // Note bodies land first, so nothing is listed before it can be opened.
+      await restoreNotes((noteBodies as Record<string, NoteBody>) ?? {}).catch(() => {});
+      replaceAll(state);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -90,18 +108,21 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-3 border-t border-white/10 pt-5">
           <p className="text-xs text-zinc-500">
-            Everything is stored in this browser only. Export a copy to move it somewhere else.
+            Everything — notes and pictures included — is stored in this browser only. Export a copy
+            to move it somewhere else.
           </p>
           <div className="flex gap-2">
             <button
-              onClick={download}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm transition hover:bg-white/10"
+              onClick={() => void download()}
+              disabled={busy}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm transition hover:bg-white/10 disabled:opacity-50"
             >
               <Download size={15} /> Export
             </button>
             <button
               onClick={() => fileRef.current?.click()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm transition hover:bg-white/10"
+              disabled={busy}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm transition hover:bg-white/10 disabled:opacity-50"
             >
               <Upload size={15} /> Import
             </button>
@@ -124,11 +145,12 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           {confirmReset ? (
             <div className="space-y-2">
               <p className="text-sm text-zinc-300">
-                Delete every bubble, note and week you have filled in?
+                Delete every bubble, page and week you have filled in?
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
+                    void clearAllNotes();
                     resetAll();
                     setConfirmReset(false);
                   }}

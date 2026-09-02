@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ImageIcon, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { centreRadius, ringLayout } from "@/lib/layout";
+import { bubbleNoteKey, deleteNotes } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
-import type { Bubble, TreeId } from "@/lib/types";
+import type { Bubble, NoteMeta, TreeId } from "@/lib/types";
 import { calendarYear } from "@/lib/weeks";
+import { NoteSheet } from "./NoteSheet";
 
 /** Placeholder id for the dashed "add a bubble" circle in the ring. */
 const ADD = "__add__";
@@ -33,7 +35,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
   const addBubble = usePlan((s) => s.addBubble);
   const renameBubble = usePlan((s) => s.renameBubble);
   const deleteBubble = usePlan((s) => s.deleteBubble);
-  const setNote = usePlan((s) => s.setNote);
+  const notes = usePlan((s) => s.notes);
 
   const [focusId, setFocusId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
   const editingRef = useRef<string | null>(null);
   const [draft, setDraft] = useState("");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
 
   const boxRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -165,7 +168,12 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                 ...bubbleStyle(focus.hue, true),
               }}
             >
-              <Label node={focus} radius={cR} birthDate={birthDate} />
+              <Label
+                node={focus}
+                radius={cR}
+                birthDate={birthDate}
+                hasNote={!!notes[bubbleNoteKey(treeId, focus.id)]}
+              />
             </div>
 
             {items.map((id, i) => {
@@ -210,7 +218,12 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                       className="flex h-full w-full items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-2 focus:outline-white/70"
                       style={bubbleStyle(node.hue)}
                     >
-                      <Label node={node} radius={spot.r} birthDate={birthDate} />
+                      <Label
+                        node={node}
+                        radius={spot.r}
+                        birthDate={birthDate}
+                        hasNote={!!notes[bubbleNoteKey(treeId, node.id)]}
+                      />
                     </button>
                   ) : (
                     <button
@@ -254,7 +267,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => {
-                  deleteBubble(treeId, deleting.id);
+                  void deleteNotes(deleteBubble(treeId, deleting.id));
                   setPendingDelete(null);
                 }}
                 className="rounded-lg bg-rose-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-500"
@@ -273,20 +286,16 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
       </div>
 
       {focus && (
-        <div className="shrink-0 border-t border-white/[0.07] px-4 py-3 sm:px-6">
-          <label className="block">
-            <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
-              Notes — {focus.label}
-            </span>
-            <textarea
-              value={focus.note}
-              onChange={(e) => setNote(treeId, focus.id, e.target.value)}
-              rows={2}
-              placeholder="Goals, plans, anything this bubble holds…"
-              className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm outline-none focus:border-indigo-400/60"
-            />
-          </label>
-        </div>
+        <NoteBar meta={notes[bubbleNoteKey(treeId, focus.id)]} onOpen={() => setNotesOpen(true)} />
+      )}
+
+      {focus && notesOpen && (
+        <NoteSheet
+          noteKey={bubbleNoteKey(treeId, focus.id)}
+          title={focus.label}
+          subtitle={trail.map((n) => n.label).join("  /  ")}
+          onClose={() => setNotesOpen(false)}
+        />
       )}
     </div>
   );
@@ -325,7 +334,17 @@ function HeroBubble({
 /** Roughly how wide one character is, as a fraction of the font size. */
 const CHAR_WIDTH = 0.6;
 
-function Label({ node, radius, birthDate }: { node: Bubble; radius: number; birthDate: string }) {
+function Label({
+  node,
+  radius,
+  birthDate,
+  hasNote,
+}: {
+  node: Bubble;
+  radius: number;
+  birthDate: string;
+  hasNote: boolean;
+}) {
   const box = radius * 1.68;
   // A single long word cannot wrap, so shrink the text until it fits across
   // the bubble rather than letting it break mid-word.
@@ -343,9 +362,7 @@ function Label({ node, radius, birthDate }: { node: Bubble; radius: number; birt
           {subtitle}
         </span>
       )}
-      {node.note.trim() && (
-        <span className="mt-1 block h-1 w-1 rounded-full bg-white/80" aria-hidden />
-      )}
+      {hasNote && <span className="mt-1 block h-1 w-1 rounded-full bg-white/80" aria-hidden />}
     </span>
   );
 }
@@ -403,6 +420,26 @@ function IconButton({
       }`}
     >
       {children}
+    </button>
+  );
+}
+
+/** The strip under the canvas: a peek at the focused bubble's page. */
+function NoteBar({ meta, onOpen }: { meta?: NoteMeta; onOpen: () => void }) {
+  return (
+    <button
+      onClick={onOpen}
+      className="flex shrink-0 items-center gap-3 border-t border-white/[0.07] px-4 py-3 text-left transition hover:bg-white/[0.03] sm:px-6"
+    >
+      <NotebookPen size={16} className="shrink-0 text-indigo-300" />
+      <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
+        {meta?.excerpt || (meta?.images ? "" : "Add notes, screenshots and pictures…")}
+      </span>
+      {!!meta?.images && (
+        <span className="flex shrink-0 items-center gap-1 text-xs text-zinc-500">
+          <ImageIcon size={13} /> {meta.images}
+        </span>
+      )}
     </button>
   );
 }

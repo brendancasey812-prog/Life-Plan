@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { CalendarRange, Compass, Settings, Sparkles } from "lucide-react";
+import { CalendarRange, Compass, NotebookPen, Settings, Sparkles } from "lucide-react";
 import { SettingsPanel } from "./SettingsPanel";
 
 const nav = [
   { href: "/", label: "My Life", icon: Sparkles },
   { href: "/weeks", label: "Weeks", icon: CalendarRange },
   { href: "/map", label: "Life Map", icon: Compass },
+  { href: "/notes", label: "Notes", icon: NotebookPen },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

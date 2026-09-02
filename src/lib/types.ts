@@ -13,8 +13,6 @@ export interface Bubble {
   label: string;
   parentId: string | null;
   childIds: string[];
-  /** Free-text notes for this bubble — goals, plans, whatever it holds. */
-  note: string;
   /** 0–360; drives the bubble's colour. Children inherit a shifted hue. */
   hue: number;
   /** Set once `generate` has run, so deleting generated bubbles sticks. */
@@ -34,8 +32,34 @@ export interface Tree {
 
 /** One cell of the years x weeks grid. Keyed `${age}:${week}`. */
 export interface WeekEntry {
-  note: string;
   done: boolean;
+}
+
+/**
+ * A note page: rich text plus any pictures pasted into it, as one HTML blob.
+ * Bodies are big, so they live in IndexedDB and only `NoteMeta` is kept in the
+ * main store — enough to list, search and flag a page without loading it.
+ */
+export interface NoteBody {
+  html: string;
+  /** Plain text of the page, for excerpts and search. */
+  text: string;
+  /** How many pictures the page holds. */
+  images: number;
+  updatedAt: number;
+}
+
+export interface NoteMeta {
+  excerpt: string;
+  images: number;
+  updatedAt: number;
+}
+
+/** A note page that stands on its own, rather than hanging off a bubble. */
+export interface Page {
+  id: string;
+  title: string;
+  createdAt: number;
 }
 
 export interface Settings {
@@ -50,4 +74,12 @@ export interface PlanState {
   settings: Settings;
   trees: Record<TreeId, Tree>;
   weeks: Record<string, WeekEntry>;
+  pages: Page[];
+  /** Note key -> what is in that page. Bodies live in IndexedDB. */
+  notes: Record<string, NoteMeta>;
+}
+
+/** A plan plus every note body, as written by Export and read by Import. */
+export interface PlanExport extends PlanState {
+  noteBodies: Record<string, NoteBody>;
 }

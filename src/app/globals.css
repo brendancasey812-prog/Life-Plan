@@ -54,3 +54,158 @@ input,
 textarea {
   font: inherit;
 }
+
+/* ── Note pages ─────────────────────────────────────────────────────────────
+   Hand-rolled prose styles for the editor's content. Tailwind's typography
+   plugin is not installed, and a note page needs only this much. */
+
+.note-body {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--foreground);
+}
+
+.note-body > * + * {
+  margin-top: 0.7em;
+}
+
+.note-body h1 {
+  font-size: 1.6rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin-top: 1.3em;
+}
+
+.note-body h2 {
+  font-size: 1.22rem;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  margin-top: 1.2em;
+}
+
+.note-body h1:first-child,
+.note-body h2:first-child {
+  margin-top: 0;
+}
+
+.note-body strong {
+  font-weight: 650;
+  color: #fff;
+}
+
+.note-body a {
+  color: #a5b4fc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.note-body mark {
+  background: rgba(250, 204, 21, 0.32);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 0.15em;
+}
+
+.note-body ul,
+.note-body ol {
+  padding-left: 1.4em;
+}
+
+.note-body ul {
+  list-style: disc;
+}
+
+.note-body ol {
+  list-style: decimal;
+}
+
+.note-body li::marker {
+  color: var(--muted);
+}
+
+.note-body li > p {
+  margin: 0;
+}
+
+.note-body blockquote {
+  border-left: 3px solid rgba(129, 140, 248, 0.6);
+  padding-left: 0.9em;
+  color: var(--muted);
+}
+
+.note-body code {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.88em;
+}
+
+.note-body pre {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85em 1em;
+  overflow-x: auto;
+}
+
+.note-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.note-body hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.6em 0;
+}
+
+/* Checklists: the checkbox is real, and ticking one saves like any edit. */
+.note-body ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.15em;
+}
+
+.note-body ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.6em;
+  align-items: flex-start;
+}
+
+.note-body ul[data-type="taskList"] li > label {
+  margin-top: 0.32em;
+  flex-shrink: 0;
+}
+
+.note-body ul[data-type="taskList"] input[type="checkbox"] {
+  accent-color: #6366f1;
+  width: 1em;
+  height: 1em;
+  cursor: pointer;
+}
+
+.note-body ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.note-body img {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.note-body img.ProseMirror-selectednode {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+/* Tiptap's placeholder, shown only while the page is untouched. */
+.note-body p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #6b7280;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

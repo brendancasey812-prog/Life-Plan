@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, ImageIcon, NotebookPen } from "lucide-react";
+import { weekNoteKey } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
 import { WEEKS_PER_YEAR, currentCell, formatRange, weekKey } from "@/lib/weeks";
+import { NoteSheet } from "./NoteSheet";
 
 const CELL = 13;
 const GAP = 2;
@@ -12,12 +14,14 @@ const GUTTER = 36;
 export function WeeksGrid() {
   const { birthDate, lifespan } = usePlan((s) => s.settings);
   const weeks = usePlan((s) => s.weeks);
-  const setWeek = usePlan((s) => s.setWeek);
+  const notes = usePlan((s) => s.notes);
+  const setWeekDone = usePlan((s) => s.setWeekDone);
 
   const [selected, setSelected] = useState<{
     age: number;
     week: number;
   } | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
   const now = currentCell(birthDate);
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +33,7 @@ export function WeeksGrid() {
   const ages = Array.from({ length: lifespan + 1 }, (_, i) => i);
   const cols = Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i);
   const entry = selected ? weeks[weekKey(selected.age, selected.week)] : undefined;
+  const meta = selected ? notes[weekNoteKey(selected.age, selected.week)] : undefined;
 
   return (
     <div className="flex h-full flex-col-reverse lg:flex-row">
@@ -76,6 +81,7 @@ export function WeeksGrid() {
                   </div>
                   {cols.map((w) => {
                     const e = weeks[weekKey(age, w)];
+                    const noted = !!notes[weekNoteKey(age, w)];
                     const lived = age < now.age || (age === now.age && w < now.week);
                     const here = age === now.age && w === now.week;
                     const active = selected?.age === age && selected?.week === w;
@@ -89,7 +95,7 @@ export function WeeksGrid() {
                         className={`rounded-[2px] transition ${
                           e?.done
                             ? "bg-emerald-500/80"
-                            : e
+                            : noted
                               ? "bg-indigo-500/80"
                               : lived
                                 ? "bg-white/25"
@@ -124,16 +130,25 @@ export function WeeksGrid() {
               </p>
             </div>
 
-            <textarea
-              value={entry?.note ?? ""}
-              onChange={(e) => setWeek(selected.age, selected.week, { note: e.target.value })}
-              rows={6}
-              placeholder="What is this week for?"
-              className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm outline-none focus:border-indigo-400/60"
-            />
+            <button
+              onClick={() => setNotesOpen(true)}
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] p-3 text-left transition hover:bg-white/[0.08]"
+            >
+              <span className="flex items-center gap-2 text-xs font-medium tracking-wide text-indigo-300 uppercase">
+                <NotebookPen size={14} /> Notes
+                {!!meta?.images && (
+                  <span className="ml-auto flex items-center gap-1 text-zinc-500 normal-case">
+                    <ImageIcon size={12} /> {meta.images}
+                  </span>
+                )}
+              </span>
+              <span className="mt-1.5 line-clamp-4 block text-sm text-zinc-400">
+                {meta?.excerpt || (meta?.images ? "" : "What is this week for?")}
+              </span>
+            </button>
 
             <button
-              onClick={() => setWeek(selected.age, selected.week, { done: !entry?.done })}
+              onClick={() => setWeekDone(selected.age, selected.week, !entry?.done)}
               className={`flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 entry?.done
                   ? "bg-emerald-500/85 text-white hover:bg-emerald-500"
@@ -145,6 +160,16 @@ export function WeeksGrid() {
           </div>
         )}
       </aside>
+
+      {selected && notesOpen && (
+        <NoteSheet
+          noteKey={weekNoteKey(selected.age, selected.week)}
+          title={`Age ${selected.age} · Week ${selected.week + 1}`}
+          subtitle={formatRange(birthDate, selected.age, selected.week)}
+          placeholder="What is this week for?"
+          onClose={() => setNotesOpen(false)}
+        />
+      )}
     </div>
   );
 }
