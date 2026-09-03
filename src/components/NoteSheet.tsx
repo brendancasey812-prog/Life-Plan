@@ -38,29 +38,29 @@ export function NoteSheet({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-sm">
-      <div className="mx-auto flex h-full w-full max-w-5xl flex-col border-x border-white/10 bg-[#0b0d14] shadow-2xl">
-        <header className="flex shrink-0 items-start gap-3 border-b border-white/[0.07] px-5 py-3.5 sm:px-8">
+    <div className="fixed inset-0 z-50 flex flex-col bg-scrim backdrop-blur-sm">
+      <div className="mx-auto flex h-full w-full max-w-5xl flex-col border-x border-edge bg-sheet shadow-2xl">
+        <header className="flex shrink-0 items-start gap-3 border-b border-edge px-5 py-3.5 sm:px-8">
           <div className="min-w-0 flex-1">
             {onRename ? (
               <input
                 value={title}
                 onChange={(e) => onRename(e.target.value)}
                 aria-label="Page title"
-                className="w-full truncate bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-zinc-600"
+                className="w-full truncate bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-faint"
                 placeholder="Untitled page"
               />
             ) : (
               <h2 className="truncate text-lg font-semibold tracking-tight">{title}</h2>
             )}
-            {subtitle && <p className="truncate text-xs text-zinc-500">{subtitle}</p>}
+            {subtitle && <p className="truncate text-xs text-faint">{subtitle}</p>}
           </div>
 
           {onDelete && (
             <button
               onClick={() => setConfirmDelete(true)}
               aria-label="Delete this page"
-              className="rounded-lg p-2 text-zinc-500 transition hover:bg-rose-500/20 hover:text-rose-300"
+              className="rounded-lg p-2 text-faint transition hover:bg-dangersoft hover:text-dangerink"
             >
               <Trash2 size={17} />
             </button>
@@ -68,7 +68,7 @@ export function NoteSheet({
           <button
             onClick={onClose}
             aria-label="Close notes"
-            className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg p-2 text-muted transition hover:bg-surface2 hover:text-fg"
           >
             <X size={18} />
           </button>
@@ -78,30 +78,30 @@ export function NoteSheet({
           <NoteEditor noteKey={noteKey} placeholder={placeholder} />
 
           {/* The same picture boxes the goal tabs show, on the same page. */}
-          <aside className="shrink-0 overflow-y-auto border-t border-white/[0.07] px-5 py-4 sm:px-8 lg:w-72 lg:border-t-0 lg:border-l lg:px-5">
-            <h3 className="flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-zinc-400 uppercase">
-              <ImageIcon size={13} className="text-indigo-300" /> Pictures
+          <aside className="shrink-0 overflow-y-auto border-t border-edge px-5 py-4 sm:px-8 lg:w-72 lg:border-t-0 lg:border-l lg:px-5">
+            <h3 className="flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-muted uppercase">
+              <ImageIcon size={13} className="text-accentink" /> Pictures
             </h3>
             <NoteGallery noteKey={noteKey} cols={1} className="mt-3" />
           </aside>
         </div>
 
         {confirmDelete && onDelete && (
-          <div className="absolute inset-x-0 bottom-6 mx-auto w-[min(26rem,90%)] rounded-xl border border-white/10 bg-[#11131c] p-4 shadow-2xl">
-            <p className="text-sm text-zinc-200">Delete this page and everything on it?</p>
+          <div className="absolute inset-x-0 bottom-6 mx-auto w-[min(26rem,90%)] rounded-xl border border-edge bg-sheet p-4 shadow-2xl">
+            <p className="text-sm text-fg">Delete this page and everything on it?</p>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => {
                   onDelete();
                   onClose();
                 }}
-                className="rounded-lg bg-rose-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-500"
+                className="rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-white transition hover:brightness-110"
               >
                 Delete
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="rounded-lg border border-white/10 px-3 py-1.5 text-sm transition hover:bg-white/10"
+                className="rounded-lg border border-edge px-3 py-1.5 text-sm transition hover:bg-surface2"
               >
                 Cancel
               </button>

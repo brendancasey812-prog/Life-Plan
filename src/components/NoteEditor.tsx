@@ -79,7 +79,7 @@ export function NoteEditor({ noteKey, placeholder }: { noteKey: string; placehol
 
   if (!body) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-zinc-600">
+      <div className="flex flex-1 items-center justify-center text-sm text-faint">
         <Loader2 className="animate-spin" size={18} />
       </div>
     );
@@ -212,7 +212,7 @@ function Surface({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.07] px-3 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-edge px-3 py-2">
         {/* One row that scrolls, rather than a block that reflows and shoves
             the save state onto a line of its own in a narrow column. */}
         <div className="flex flex-1 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -352,7 +352,7 @@ function Surface({
           {imageSelected && (
             <>
               <Divider />
-              <span className="pl-1 text-xs text-zinc-500">Picture</span>
+              <span className="pl-1 text-xs text-faint">Picture</span>
               <Tool label="Small picture" onClick={() => setWidth("40%")}>
                 <span className="text-xs">S</span>
               </Tool>
@@ -372,7 +372,7 @@ function Surface({
           )}
         </div>
 
-        <span className="flex shrink-0 items-center gap-1.5 text-xs text-zinc-500">
+        <span className="flex shrink-0 items-center gap-1.5 text-xs text-faint">
           {saveState === "saving" && <Loader2 className="animate-spin" size={13} />}
           {saveState === "saved" && <Check size={13} />}
           {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : ""}
@@ -415,7 +415,7 @@ function Tool({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 transition ${
-        on ? "bg-indigo-500/25 text-indigo-200" : "text-zinc-400 hover:bg-white/10 hover:text-white"
+        on ? "bg-accentsoft text-accentink" : "text-muted hover:bg-surface2 hover:text-fg"
       }`}
     >
       {children}
@@ -424,5 +424,5 @@ function Tool({
 }
 
 function Divider() {
-  return <span className="mx-1 h-5 w-px bg-white/10" />;
+  return <span className="mx-1 h-5 w-px bg-surface2" />;
 }

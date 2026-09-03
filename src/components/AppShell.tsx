@@ -45,8 +45,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex shrink-0 items-center gap-3 border-b border-white/[0.07] px-3 py-3 backdrop-blur-xl sm:px-5">
-        <span className="hidden shrink-0 text-sm font-semibold tracking-tight text-zinc-300 xl:block">
+      <header className="flex shrink-0 items-center gap-3 border-b border-edge px-3 py-3 backdrop-blur-xl sm:px-5">
+        <span className="hidden shrink-0 text-sm font-semibold tracking-tight text-muted xl:block">
           Life&nbsp;Plan
         </span>
 
@@ -60,16 +60,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={href}
                 className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
                   active
-                    ? "bg-indigo-500/20 text-indigo-200"
-                    : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100"
+                    ? "bg-accentsoft text-accentink"
+                    : "text-muted hover:bg-surface hover:text-fg"
                 }`}
               >
                 <Icon size={16} className="shrink-0" />
                 {label}
                 {suffix && (
-                  <span className={active ? "text-indigo-300/80" : "text-zinc-500"}>
-                    — {suffix}
-                  </span>
+                  <span className={active ? "text-accentink/80" : "text-faint"}>— {suffix}</span>
                 )}
               </Link>
             );
@@ -80,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <button
           onClick={() => setShowSettings(true)}
           aria-label="Settings"
-          className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] p-2 text-zinc-300 transition hover:bg-white/10 hover:text-white"
+          className="shrink-0 rounded-xl border border-edge bg-surface p-2 text-muted transition hover:bg-surface2 hover:text-fg"
         >
           <Settings size={17} />
         </button>

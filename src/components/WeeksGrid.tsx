@@ -39,13 +39,13 @@ export function WeeksGrid() {
     <div className="flex h-full flex-col-reverse lg:flex-row">
       <div className="flex min-h-0 flex-1 flex-col">
         {/* Outside the scroller, so the key stays put as the grid moves. */}
-        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-4 pt-4 pb-3 text-xs text-zinc-500 sm:px-6">
-          <span className="font-medium text-zinc-400">
+        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-4 pt-4 pb-3 text-xs text-faint sm:px-6">
+          <span className="font-medium text-muted">
             Rows: age 0 – {lifespan} · Columns: weeks 1 – {WEEKS_PER_YEAR}
           </span>
-          <Key className="bg-white/25" label="Lived" />
-          <Key className="bg-indigo-500/80" label="Has a goal" />
-          <Key className="bg-emerald-500/80" label="Done" />
+          <Key className="bg-cellpast" label="Lived" />
+          <Key className="bg-accent" label="Has a goal" />
+          <Key className="bg-done" label="Done" />
         </div>
 
         <div className="min-h-0 flex-1 overflow-auto px-4 pb-4 sm:px-6">
@@ -55,7 +55,7 @@ export function WeeksGrid() {
                 <div
                   key={w}
                   style={{ width: CELL }}
-                  className="text-center text-[8px] leading-none text-zinc-600"
+                  className="text-center text-[8px] leading-none text-faint"
                 >
                   {w % 4 === 0 ? w + 1 : ""}
                 </div>
@@ -74,7 +74,7 @@ export function WeeksGrid() {
                   <div
                     style={{ width: GUTTER }}
                     className={`pr-2 text-right text-[10px] leading-none ${
-                      isNow ? "font-semibold text-indigo-300" : "text-zinc-600"
+                      isNow ? "font-semibold text-accentink" : "text-faint"
                     }`}
                   >
                     {age % 5 === 0 || isNow ? age : ""}
@@ -94,14 +94,14 @@ export function WeeksGrid() {
                         style={{ width: CELL, height: CELL }}
                         className={`rounded-[2px] transition ${
                           e?.done
-                            ? "bg-emerald-500/80"
+                            ? "bg-done"
                             : noted
-                              ? "bg-indigo-500/80"
+                              ? "bg-accent"
                               : lived
-                                ? "bg-white/25"
-                                : "bg-white/[0.05]"
-                        } ${here ? "ring-2 ring-indigo-300" : ""} ${
-                          active ? "ring-2 ring-white" : "hover:bg-white/25"
+                                ? "bg-cellpast"
+                                : "bg-cell"
+                        } ${here ? "ring-2 ring-accent" : ""} ${
+                          active ? "ring-2 ring-fg" : "hover:bg-cellhover"
                         }`}
                       />
                     );
@@ -113,9 +113,9 @@ export function WeeksGrid() {
         </div>
       </div>
 
-      <aside className="shrink-0 border-b border-white/[0.07] px-4 py-4 sm:px-6 lg:w-80 lg:border-b-0 lg:border-l">
+      <aside className="shrink-0 border-b border-edge px-4 py-4 sm:px-6 lg:w-80 lg:border-b-0 lg:border-l">
         {!selected ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-faint">
             Pick any week to write down what it is for. You are in age {now.age}, week{" "}
             {now.week + 1}.
           </p>
@@ -125,24 +125,24 @@ export function WeeksGrid() {
               <h2 className="text-base font-semibold tracking-tight">
                 Age {selected.age} · Week {selected.week + 1}
               </h2>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-faint">
                 {formatRange(birthDate, selected.age, selected.week)}
               </p>
             </div>
 
             <button
               onClick={() => setNotesOpen(true)}
-              className="w-full rounded-lg border border-white/10 bg-white/[0.04] p-3 text-left transition hover:bg-white/[0.08]"
+              className="w-full rounded-lg border border-edge bg-surface p-3 text-left transition hover:bg-surface2"
             >
-              <span className="flex items-center gap-2 text-xs font-medium tracking-wide text-indigo-300 uppercase">
+              <span className="flex items-center gap-2 text-xs font-medium tracking-wide text-accentink uppercase">
                 <NotebookPen size={14} /> Notes
                 {!!meta?.images && (
-                  <span className="ml-auto flex items-center gap-1 text-zinc-500 normal-case">
+                  <span className="ml-auto flex items-center gap-1 text-faint normal-case">
                     <ImageIcon size={12} /> {meta.images}
                   </span>
                 )}
               </span>
-              <span className="mt-1.5 line-clamp-4 block text-sm text-zinc-400">
+              <span className="mt-1.5 line-clamp-4 block text-sm text-muted">
                 {meta?.excerpt || (meta?.images ? "" : "What is this week for?")}
               </span>
             </button>
@@ -151,8 +151,8 @@ export function WeeksGrid() {
               onClick={() => setWeekDone(selected.age, selected.week, !entry?.done)}
               className={`flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 entry?.done
-                  ? "bg-emerald-500/85 text-white hover:bg-emerald-500"
-                  : "border border-white/10 text-zinc-300 hover:bg-white/10"
+                  ? "bg-done text-white hover:brightness-110"
+                  : "border border-edge text-muted hover:bg-surface2"
               }`}
             >
               <Check size={15} /> {entry?.done ? "Done" : "Mark done"}

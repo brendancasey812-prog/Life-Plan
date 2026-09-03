@@ -71,7 +71,7 @@ export function NoteGallery({
 
   if (!pictures) {
     return (
-      <div className={`flex items-center justify-center py-10 text-zinc-600 ${className}`}>
+      <div className={`flex items-center justify-center py-10 text-faint ${className}`}>
         <Loader2 className="animate-spin" size={16} />
       </div>
     );
@@ -83,7 +83,7 @@ export function NoteGallery({
         {pictures.map((src, i) => (
           <figure
             key={`${i}-${src.slice(24, 40)}`}
-            className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]"
+            className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-edge bg-surface"
           >
             {/* Pictures are user files with no meaningful alt text to give. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -91,7 +91,7 @@ export function NoteGallery({
             <button
               onClick={() => void commit(pictures.filter((_, k) => k !== i))}
               aria-label={`Remove picture ${i + 1}`}
-              className="absolute top-1.5 right-1.5 rounded-full bg-black/70 p-1.5 text-zinc-300 opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-rose-500/90 hover:text-white"
+              className="absolute top-1.5 right-1.5 rounded-full bg-scrim p-1.5 text-muted opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-danger hover:text-white"
             >
               <X size={13} />
             </button>
@@ -113,8 +113,8 @@ export function NoteGallery({
           onPaste={(e) => void add(imageFilesFrom(e.clipboardData))}
           className={`flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed text-xs transition ${
             dragging
-              ? "border-indigo-400 bg-indigo-500/10 text-indigo-200"
-              : "border-white/15 text-zinc-500 hover:border-white/35 hover:text-zinc-300"
+              ? "border-accent bg-accentsoft text-accentink"
+              : "border-edge2 text-faint hover:border-edge2 hover:text-muted"
           }`}
         >
           {busy ? (
@@ -123,7 +123,7 @@ export function NoteGallery({
             <>
               <ImagePlus size={20} />
               <span>Add a picture</span>
-              <span className="text-[11px] text-zinc-600">click, drop or paste</span>
+              <span className="text-[11px] text-faint">click, drop or paste</span>
             </>
           )}
         </button>

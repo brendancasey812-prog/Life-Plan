@@ -1,19 +1,126 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* ── Palette ────────────────────────────────────────────────────────────────
+   Each colour is written once, light value first, and `light-dark()` picks
+   between them from the root's `color-scheme`. That means the default —
+   following the device — is handled entirely in CSS: correct on the very
+   first paint, with no script and no flash, and it follows the device live
+   without a listener. The two classes exist only to override that choice. */
 
 :root {
+  color-scheme: light dark;
+
+  /* 0 in light, 1 in dark. The only value that cannot go through
+     `light-dark()` is a number, so everything numeric is derived from this
+     one switch rather than being written out per theme. */
+  --dk: 0;
+
+  --fg: light-dark(#14161d, #e8e9f0);
+  --muted: light-dark(#565d6c, #a6acbb);
+  --faint: light-dark(#8b91a1, #767d8d);
+
+  --surface: light-dark(rgb(17 22 44 / 0.035), rgb(255 255 255 / 0.04));
+  --surface-2: light-dark(rgb(17 22 44 / 0.07), rgb(255 255 255 / 0.09));
+  --surface-3: light-dark(rgb(17 22 44 / 0.12), rgb(255 255 255 / 0.16));
+  --edge: light-dark(rgb(17 22 44 / 0.12), rgb(255 255 255 / 0.09));
+  --edge-2: light-dark(rgb(17 22 44 / 0.26), rgb(255 255 255 / 0.22));
+
+  --sheet: light-dark(#ffffff, #0c0e15);
+  --scrim: light-dark(rgb(20 22 32 / 0.35), rgb(0 0 0 / 0.66));
+
+  --accent: light-dark(#4f46e5, #6366f1);
+  --accent-soft: light-dark(rgb(79 70 229 / 0.13), rgb(99 102 241 / 0.22));
+  --accent-ink: light-dark(#4338ca, #a5b4fc);
+
+  --danger: light-dark(#e11d48, #f43f5e);
+  --danger-soft: light-dark(rgb(225 29 72 / 0.14), rgb(244 63 94 / 0.22));
+  --danger-ink: light-dark(#be123c, #fda4af);
+  --done: light-dark(#059669, #10b981);
+
+  /* Week grid cells. */
+  --cell: light-dark(rgb(17 22 44 / 0.06), rgb(255 255 255 / 0.05));
+  --cell-past: light-dark(rgb(17 22 44 / 0.24), rgb(255 255 255 / 0.25));
+  --cell-hover: light-dark(rgb(17 22 44 / 0.4), rgb(255 255 255 / 0.45));
+
+  --note-mark: light-dark(rgb(250 204 21 / 0.45), rgb(250 204 21 / 0.32));
+  --note-strong: light-dark(#05070c, #ffffff);
+
+  /* Bubbles. `on` is a normal bubble, `dim` the one held at the centre; both
+     stay dark enough for their white labels in either theme. */
+  --b-on-s: calc(72% + var(--dk) * 10%);
+  --b-on-s2: calc(66% + var(--dk) * 4%);
+  --b-on-l1: calc(56% + var(--dk) * 6%);
+  --b-on-l2: calc(38% - var(--dk) * 4%);
+  --b-on-a: calc(1 - var(--dk) * 0.12);
+  --b-dim-s: 48%;
+  --b-dim-s2: 42%;
+  --b-dim-l1: calc(52% - var(--dk) * 6%);
+  --b-dim-l2: calc(38% - var(--dk) * 12%);
+  --b-dim-a: calc(1 - var(--dk) * 0.15);
+  --b-ring-l: calc(45% + var(--dk) * 25%);
+  --b-ring-a: calc(0.32 - var(--dk) * 0.04);
+  --b-shadow-a: calc(0.35 + var(--dk) * 0.4);
+
+  --page-bg:
+    radial-gradient(
+      1100px 640px at 8% -10%,
+      light-dark(rgb(99 102 241 / 0.13), rgb(99 102 241 / 0.16)),
+      transparent 60%
+    ),
+    radial-gradient(
+      950px 560px at 100% 0%,
+      light-dark(rgb(168 85 247 / 0.09), rgb(168 85 247 / 0.11)),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 900px at 85% 110%,
+      light-dark(rgb(20 184 166 / 0.09), rgb(56 189 248 / 0.08)),
+      transparent 60%
+    ),
+    light-dark(#fbfbfd, #07080d);
+}
+
+/* An explicit choice, which is all these classes do. */
+:root.light {
+  color-scheme: light;
+  --dk: 0;
+}
+
+:root.dark {
   color-scheme: dark;
-  --bg: #07080d;
-  --panel: rgba(255, 255, 255, 0.04);
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --foreground: #e8e9f0;
-  --muted: #9ba1b2;
+  --dk: 1;
+}
+
+/* Following the device, which is the default. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --dk: 1;
+  }
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
+
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface-2);
+  --color-surface3: var(--surface-3);
+  --color-edge: var(--edge);
+  --color-edge2: var(--edge-2);
+  --color-sheet: var(--sheet);
+  --color-scrim: var(--scrim);
+  --color-accent: var(--accent);
+  --color-accentsoft: var(--accent-soft);
+  --color-accentink: var(--accent-ink);
+  --color-danger: var(--danger);
+  --color-dangersoft: var(--danger-soft);
+  --color-dangerink: var(--danger-ink);
+  --color-done: var(--done);
+  --color-cell: var(--cell);
+  --color-cellpast: var(--cell-past);
+  --color-cellhover: var(--cell-hover);
 }
 
 html,
@@ -22,14 +129,20 @@ body {
 }
 
 body {
-  color: var(--foreground);
+  color: var(--fg);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(1100px 640px at 8% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
-    radial-gradient(950px 560px at 100% 0%, rgba(168, 85, 247, 0.11), transparent 55%),
-    radial-gradient(900px 900px at 85% 110%, rgba(56, 189, 248, 0.08), transparent 60%), var(--bg);
+  background: var(--page-bg);
   background-attachment: fixed;
+}
+
+::placeholder {
+  color: var(--faint);
+}
+
+input,
+textarea {
+  font: inherit;
 }
 
 /* Bubbles animate to their new size and position whenever the layout re-solves
@@ -43,16 +156,26 @@ body {
       height 320ms cubic-bezier(0.22, 1, 0.36, 1),
       opacity 200ms ease;
   }
+
+  /* Only while the theme is actually being switched. Leaving this on would
+     put a quarter-second lag behind every hover in the app. */
+  html.theme-shift,
+  html.theme-shift *,
+  html.theme-shift *::before,
+  html.theme-shift *::after {
+    transition:
+      background-color 280ms ease,
+      background-image 280ms ease,
+      border-color 280ms ease,
+      color 280ms ease,
+      fill 280ms ease,
+      box-shadow 280ms ease !important;
+  }
 }
 
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-}
-
-input,
-textarea {
-  font: inherit;
+/* White on a bubble, whatever hue it landed on. */
+.bubble-label {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.38);
 }
 
 /* ── Note pages ─────────────────────────────────────────────────────────────
@@ -62,7 +185,7 @@ textarea {
 .note-body {
   font-size: 0.95rem;
   line-height: 1.7;
-  color: var(--foreground);
+  color: var(--fg);
 }
 
 .note-body > * + * {
@@ -90,17 +213,17 @@ textarea {
 
 .note-body strong {
   font-weight: 650;
-  color: #fff;
+  color: var(--note-strong);
 }
 
 .note-body a {
-  color: #a5b4fc;
+  color: var(--accent-ink);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .note-body mark {
-  background: rgba(250, 204, 21, 0.32);
+  background: var(--note-mark);
   color: inherit;
   border-radius: 3px;
   padding: 0 0.15em;
@@ -120,7 +243,7 @@ textarea {
 }
 
 .note-body li::marker {
-  color: var(--muted);
+  color: var(--faint);
 }
 
 .note-body li > p {
@@ -128,21 +251,21 @@ textarea {
 }
 
 .note-body blockquote {
-  border-left: 3px solid rgba(129, 140, 248, 0.6);
+  border-left: 3px solid var(--accent);
   padding-left: 0.9em;
   color: var(--muted);
 }
 
 .note-body code {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-2);
   border-radius: 4px;
   padding: 0.1em 0.35em;
   font-size: 0.88em;
 }
 
 .note-body pre {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--edge);
   border-radius: 10px;
   padding: 0.85em 1em;
   overflow-x: auto;
@@ -155,7 +278,7 @@ textarea {
 
 .note-body hr {
   border: 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--edge);
   margin: 1.6em 0;
 }
 
@@ -177,34 +300,34 @@ textarea {
 }
 
 .note-body ul[data-type="taskList"] input[type="checkbox"] {
-  accent-color: #6366f1;
+  accent-color: var(--accent);
   width: 1em;
   height: 1em;
   cursor: pointer;
 }
 
 .note-body ul[data-type="taskList"] li[data-checked="true"] > div {
-  color: var(--muted);
+  color: var(--faint);
   text-decoration: line-through;
 }
 
 .note-body img {
   border-radius: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--edge);
   display: block;
   max-width: 100%;
   height: auto;
 }
 
 .note-body img.ProseMirror-selectednode {
-  outline: 2px solid #818cf8;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 /* Tiptap's placeholder, shown only while the page is untouched. */
 .note-body p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #6b7280;
+  color: var(--faint);
   float: left;
   height: 0;
   pointer-events: none;

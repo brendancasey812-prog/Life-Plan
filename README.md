@@ -18,8 +18,35 @@ network call; export a JSON copy from **Settings** to move it.
 | **Monthly Goals — September 2026** | The same, for this month. |
 | **Notes** | Every page in one place — the ones hanging off bubbles and weeks, plus any you start on their own — searchable across their whole text. |
 
-A settings box sits in the top-right corner of every tab: your name, date of
-birth, how far to plan, and export / import / reset.
+A settings box sits in the top-right corner of every tab: light / dark /
+system, your name, date of birth, how far to plan, and export / import / reset.
+
+## Light and dark
+
+Every colour is written once in [`globals.css`](src/app/globals.css) — light
+value first — and `light-dark()` picks between them from the root's
+`color-scheme`. Two consequences worth knowing:
+
+- **Following the device needs no JavaScript at all.** It is right on the very
+  first paint, and it keeps up when the device flips theme, with no script and
+  no listener.
+- **An explicit choice is just a class** (`.light` / `.dark`) on `<html>`,
+  which is the only thing those classes do.
+
+Numbers cannot go through `light-dark()`, so everything numeric — the bubble
+lightness, saturation and alpha — is derived from one `--dk` switch that is
+`0` in light and `1` in dark, rather than written out twice.
+
+A bubble keeps its hue in both themes. Its labels are white, and the same
+lightness reads very differently by hue, so the warm half of the wheel is
+pulled down until every bubble carries its text.
+
+Since the choice lives in the browser, restoring it before the first paint
+needs a blocking script, and Next strips an inline one from the tree while
+`next/script` only runs at hydration. So
+[`scripts/inline-theme.mjs`](scripts/inline-theme.mjs) injects one into every
+exported page after the build. Without it the only cost would be a blink of
+the device's theme, and only for someone whose choice disagrees with it.
 
 ## Bubbles
 
@@ -119,7 +146,7 @@ note becomes a page.
 npm install
 npm run dev     # http://localhost:3000
 npm run lint
-npm run build   # static export to ./out
+npm run build   # static export to ./out, then inject the theme script
 ```
 
 ## Deploying

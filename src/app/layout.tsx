@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`dark ${geistSans.variable} h-full antialiased`}>
+    // `scripts/inline-theme.mjs` puts a class on this element before the first
+    // paint, which the server could not have known about.
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full">
         <AppShell>{children}</AppShell>
       </body>

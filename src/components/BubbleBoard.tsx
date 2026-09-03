@@ -21,10 +21,28 @@ function subtitleFor(node: Bubble, birthDate: string): string {
   return from === to ? String(from) : `${from} – ${to}`;
 }
 
+/**
+ * The same lightness reads very differently by hue — a yellow at 56% is far
+ * brighter than a blue at 56%, and the labels are white. This pulls the warm
+ * half of the wheel down so every bubble carries its text, and leaves the
+ * cool half alone.
+ */
+function hueDrop(hue: number): number {
+  const warm = Math.max(0, Math.cos(((hue - 70) * Math.PI) / 180));
+  return +(warm * 16).toFixed(1);
+}
+
+/**
+ * A bubble keeps its hue in both themes; only how light, saturated and solid
+ * it is comes from the palette. `dim` is the bubble held at the centre.
+ */
 function bubbleStyle(hue: number, dim = false) {
+  const v = dim ? "dim" : "on";
+  const d = hueDrop(hue);
+  const l = (n: 1 | 2) => `calc(var(--b-${v}-l${n}) - ${d}%)`;
   return {
-    background: `radial-gradient(circle at 32% 26%, hsl(${hue} 82% 62% / ${dim ? 0.5 : 0.85}), hsl(${hue} 70% 34% / ${dim ? 0.45 : 0.9}) 70%)`,
-    boxShadow: `0 0 0 1px hsl(${hue} 70% 70% / 0.28), 0 12px 34px -12px hsl(${hue} 80% 40% / 0.75)`,
+    background: `radial-gradient(circle at 32% 26%, hsl(${hue} var(--b-${v}-s) ${l(1)} / var(--b-${v}-a)), hsl(${hue} var(--b-${v}-s2) ${l(2)} / var(--b-${v}-a)) 70%)`,
+    boxShadow: `0 0 0 1px hsl(${hue} 70% var(--b-ring-l) / var(--b-ring-a)), 0 12px 34px -12px hsl(${hue} 80% 40% / var(--b-shadow-a))`,
   };
 }
 
@@ -124,7 +142,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
         {focus && (
           <button
             onClick={() => setFocusId(focus.parentId)}
-            className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-100"
+            className="rounded-lg p-1.5 text-muted transition hover:bg-surface2 hover:text-fg"
             aria-label="Back"
           >
             <ChevronLeft size={18} />
@@ -133,11 +151,11 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
         <nav className="flex min-w-0 flex-wrap items-center gap-1 text-sm">
           {trail.map((node, i) => (
             <span key={node.id} className="flex items-center gap-1">
-              {i > 0 && <span className="text-zinc-600">/</span>}
+              {i > 0 && <span className="text-faint">/</span>}
               <button
                 onClick={() => setFocusId(node.id)}
-                className={`rounded px-1.5 py-0.5 transition hover:bg-white/10 ${
-                  i === trail.length - 1 ? "font-medium text-zinc-100" : "text-zinc-400"
+                className={`rounded px-1.5 py-0.5 transition hover:bg-surface2 ${
+                  i === trail.length - 1 ? "font-medium text-fg" : "text-muted"
                 }`}
               >
                 {node.label}
@@ -215,7 +233,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                   ) : node ? (
                     <button
                       onClick={() => open(node.id)}
-                      className="flex h-full w-full items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-2 focus:outline-white/70"
+                      className="flex h-full w-full items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-2 focus:outline-accent"
                       style={bubbleStyle(node.hue)}
                     >
                       <Label
@@ -229,7 +247,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                     <button
                       onClick={() => startEdit(ADD, "")}
                       aria-label="Add a bubble"
-                      className="flex h-full w-full items-center justify-center rounded-full border-2 border-dashed border-white/25 text-zinc-400 transition hover:border-white/50 hover:text-white"
+                      className="flex h-full w-full items-center justify-center rounded-full border-2 border-dashed border-edge2 text-muted transition hover:border-edge2 hover:text-fg"
                     >
                       <Plus size={Math.max(14, Math.min(spot.r * 0.7, 30))} />
                     </button>
@@ -259,8 +277,8 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
         )}
 
         {deleting && (
-          <div className="absolute inset-x-0 bottom-4 mx-auto w-[min(26rem,90%)] rounded-xl border border-white/10 bg-[#11131c] p-4 shadow-2xl">
-            <p className="text-sm text-zinc-200">
+          <div className="absolute inset-x-0 bottom-4 mx-auto w-[min(26rem,90%)] rounded-xl border border-edge bg-sheet p-4 shadow-2xl">
+            <p className="text-sm text-fg">
               Delete <span className="font-medium">{deleting.label}</span>
               {deleting.childIds.length > 0 && " and everything inside it"}?
             </p>
@@ -270,13 +288,13 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                   void deleteNotes(deleteBubble(treeId, deleting.id));
                   setPendingDelete(null);
                 }}
-                className="rounded-lg bg-rose-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-500"
+                className="rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-white transition hover:brightness-110"
               >
                 Delete
               </button>
               <button
                 onClick={() => setPendingDelete(null)}
-                className="rounded-lg border border-white/10 px-3 py-1.5 text-sm transition hover:bg-white/10"
+                className="rounded-lg border border-edge px-3 py-1.5 text-sm transition hover:bg-surface2"
               >
                 Cancel
               </button>
@@ -316,17 +334,17 @@ function HeroBubble({
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
       <button
         onClick={onOpen}
-        className="bubble flex items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-4 focus:outline-white/70"
+        className="bubble flex items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-4 focus:outline-accent"
         style={{ width: radius * 2, height: radius * 2, ...bubbleStyle(node.hue) }}
       >
         <span
-          className="px-6 font-semibold tracking-tight text-white"
+          className="bubble-label px-6 font-semibold tracking-tight text-white"
           style={{ fontSize: Math.max(18, Math.min(radius * 0.24, 48)) }}
         >
           {node.label}
         </span>
       </button>
-      <p className="max-w-xs text-center text-sm text-zinc-500">{hint}</p>
+      <p className="max-w-xs text-center text-sm text-faint">{hint}</p>
     </div>
   );
 }
@@ -353,7 +371,7 @@ function Label({
   const subtitle = subtitleFor(node, birthDate);
   return (
     <span
-      className="flex flex-col items-center justify-center overflow-hidden leading-tight font-medium text-white"
+      className="bubble-label flex flex-col items-center justify-center overflow-hidden leading-tight font-medium text-white"
       style={{ width: box, fontSize: size, wordBreak: "break-word" }}
     >
       {node.label}
@@ -415,8 +433,8 @@ function IconButton({
     <button
       aria-label={label}
       onClick={onClick}
-      className={`rounded-full border border-white/15 bg-[#11131c] p-1.5 text-zinc-300 shadow-lg transition hover:text-white ${
-        danger ? "hover:bg-rose-500/80" : "hover:bg-white/20"
+      className={`rounded-full border border-edge2 bg-sheet p-1.5 text-muted shadow-lg transition hover:text-fg ${
+        danger ? "hover:brightness-110" : "hover:bg-surface3"
       }`}
     >
       {children}
@@ -429,14 +447,14 @@ function NoteBar({ meta, onOpen }: { meta?: NoteMeta; onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="flex shrink-0 items-center gap-3 border-t border-white/[0.07] px-4 py-3 text-left transition hover:bg-white/[0.03] sm:px-6"
+      className="flex shrink-0 items-center gap-3 border-t border-edge px-4 py-3 text-left transition hover:bg-surface sm:px-6"
     >
-      <NotebookPen size={16} className="shrink-0 text-indigo-300" />
-      <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
+      <NotebookPen size={16} className="shrink-0 text-accentink" />
+      <span className="min-w-0 flex-1 truncate text-sm text-muted">
         {meta?.excerpt || (meta?.images ? "" : "Add notes, screenshots and pictures…")}
       </span>
       {!!meta?.images && (
-        <span className="flex shrink-0 items-center gap-1 text-xs text-zinc-500">
+        <span className="flex shrink-0 items-center gap-1 text-xs text-faint">
           <ImageIcon size={13} /> {meta.images}
         </span>
       )}

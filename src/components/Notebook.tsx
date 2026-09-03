@@ -95,18 +95,18 @@ export function Notebook() {
         <div className="relative min-w-0 flex-1">
           <Search
             size={15}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-zinc-500"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-faint"
           />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search every page…"
-            className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pr-3 pl-9 text-sm outline-none focus:border-indigo-400/60"
+            className="w-full rounded-xl border border-edge bg-surface py-2.5 pr-3 pl-9 text-sm outline-none focus:border-accent"
           />
         </div>
         <button
           onClick={() => setOpenKey(pageNoteKey(addPage("")))}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-500/90 px-3.5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-accent px-3.5 py-2.5 text-sm font-medium text-white transition hover:brightness-110"
         >
           <Plus size={16} /> New page
         </button>
@@ -114,7 +114,7 @@ export function Notebook() {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
         {shown.length === 0 ? (
-          <p className="py-16 text-center text-sm text-zinc-600">
+          <p className="py-16 text-center text-sm text-faint">
             {q
               ? "Nothing matches that."
               : "No pages yet. Start one here, or open the notes on any bubble or week."}
@@ -127,21 +127,21 @@ export function Notebook() {
                 <li key={entry.key}>
                   <button
                     onClick={() => setOpenKey(entry.key)}
-                    className="flex h-full w-full flex-col gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-left transition hover:border-white/20 hover:bg-white/[0.06]"
+                    className="flex h-full w-full flex-col gap-1.5 rounded-xl border border-edge bg-surface p-4 text-left transition hover:border-edge2 hover:bg-surface2"
                   >
                     <span className="flex items-center gap-2">
-                      <Icon size={14} className="shrink-0 text-indigo-300" />
+                      <Icon size={14} className="shrink-0 text-accentink" />
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">
                         {entry.title}
                       </span>
                       {!!entry.meta?.images && (
-                        <span className="flex shrink-0 items-center gap-1 text-xs text-zinc-500">
+                        <span className="flex shrink-0 items-center gap-1 text-xs text-faint">
                           <ImageIcon size={12} /> {entry.meta.images}
                         </span>
                       )}
                     </span>
-                    <span className="truncate text-xs text-zinc-500">{entry.context}</span>
-                    <span className="line-clamp-3 text-sm text-zinc-400">
+                    <span className="truncate text-xs text-faint">{entry.context}</span>
+                    <span className="line-clamp-3 text-sm text-muted">
                       {entry.meta?.excerpt || "Empty"}
                     </span>
                   </button>
