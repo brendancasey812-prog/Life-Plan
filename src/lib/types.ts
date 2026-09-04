@@ -57,6 +57,24 @@ export interface NoteMeta {
   updatedAt: number;
 }
 
+/** The cards the entry tab is built from. */
+export type WidgetKind =
+  | "age"
+  | "date"
+  | "yearGoals"
+  | "monthGoals"
+  | "bubbles"
+  | "weeks"
+  | "lifeMap"
+  | "recentNotes";
+
+export interface Widget {
+  id: string;
+  kind: WidgetKind;
+  /** Columns it takes on a wide screen, out of three. */
+  span: 1 | 2 | 3;
+}
+
 /** A note page that stands on its own, rather than hanging off a bubble. */
 export interface Page {
   id: string;
@@ -79,6 +97,8 @@ export interface PlanState {
   pages: Page[];
   /** Note key -> what is in that page. Bodies live in IndexedDB. */
   notes: Record<string, NoteMeta>;
+  /** The entry tab's layout, in the order the cards appear. */
+  widgets: Widget[];
 }
 
 /** A plan plus every note body, as written by Export and read by Import. */

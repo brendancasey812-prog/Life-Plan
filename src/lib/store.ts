@@ -5,7 +5,18 @@ import { persist } from "zustand/middleware";
 import { findTimeline } from "./goals";
 import { bubbleNoteKey, excerptOf, weekNoteKey, writeNote } from "./notes";
 import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
-import type { Bubble, NoteMeta, Page, PlanState, Settings, Tree, TreeId, WeekEntry } from "./types";
+import type {
+  Bubble,
+  NoteMeta,
+  Page,
+  PlanState,
+  Settings,
+  Tree,
+  TreeId,
+  WeekEntry,
+  Widget,
+  WidgetKind,
+} from "./types";
 import { weekKey } from "./weeks";
 
 const DEFAULT_SETTINGS: Settings = {
@@ -13,6 +24,21 @@ const DEFAULT_SETTINGS: Settings = {
   birthDate: "2001-01-01",
   lifespan: 100,
 };
+
+/** What the entry tab starts as: age first, then the rest of the plan. */
+export function defaultWidgets(): Widget[] {
+  const kinds: [WidgetKind, 1 | 2 | 3][] = [
+    ["age", 3],
+    ["date", 1],
+    ["yearGoals", 2],
+    ["monthGoals", 2],
+    ["weeks", 1],
+    ["bubbles", 1],
+    ["lifeMap", 1],
+    ["recentNotes", 1],
+  ];
+  return kinds.map(([kind, span]) => ({ id: newId("w"), kind, span }));
+}
 
 interface Actions {
   /** Fills in a timeline bubble's children the first time it is opened. */
@@ -30,6 +56,12 @@ interface Actions {
   addPage: (title: string) => string;
   renamePage: (id: string, title: string) => void;
   deletePage: (id: string) => void;
+  addWidget: (kind: WidgetKind) => void;
+  removeWidget: (id: string) => void;
+  resizeWidget: (id: string, span: 1 | 2 | 3) => void;
+  /** Drops the dragged card into the slot the other one occupies. */
+  moveWidget: (fromId: string, toId: string) => void;
+  resetWidgets: () => void;
   /** Records what a note page holds; null once the page is empty or gone. */
   setNoteMeta: (key: string, meta: NoteMeta | null) => void;
   updateSettings: (patch: Partial<Settings>) => void;
@@ -46,6 +78,7 @@ function emptyState(): PlanState {
     weeks: {},
     pages: [],
     notes: {},
+    widgets: defaultWidgets(),
   };
 }
 
@@ -261,6 +294,27 @@ export const usePlan = create<PlanStore>()(
           notes: withoutKeys(s.notes, [`page:${id}`]),
         })),
 
+      addWidget: (kind) =>
+        set((s) => ({ widgets: [...s.widgets, { id: newId("w"), kind, span: 1 }] })),
+
+      removeWidget: (id) => set((s) => ({ widgets: s.widgets.filter((w) => w.id !== id) })),
+
+      resizeWidget: (id, span) =>
+        set((s) => ({ widgets: s.widgets.map((w) => (w.id === id ? { ...w, span } : w)) })),
+
+      moveWidget: (fromId, toId) =>
+        set((s) => {
+          const from = s.widgets.findIndex((w) => w.id === fromId);
+          const to = s.widgets.findIndex((w) => w.id === toId);
+          if (from < 0 || to < 0 || from === to) return {};
+          const widgets = [...s.widgets];
+          const [moved] = widgets.splice(from, 1);
+          widgets.splice(to, 0, moved);
+          return { widgets };
+        }),
+
+      resetWidgets: () => set({ widgets: defaultWidgets() }),
+
       setNoteMeta: (key, meta) =>
         set((s) =>
           meta ? { notes: { ...s.notes, [key]: meta } } : { notes: withoutKeys(s.notes, [key]) },
@@ -274,16 +328,20 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 2,
+      version: 3,
       partialize: (s): PlanState => ({
         settings: s.settings,
         trees: s.trees,
         weeks: s.weeks,
         pages: s.pages,
         notes: s.notes,
+        widgets: s.widgets,
       }),
       migrate: async (persisted, version) => {
         const state = persisted as PlanState;
+        // The entry tab became a widget board; a plan from before it gets the
+        // default layout.
+        if (!state.widgets?.length) state.widgets = defaultWidgets();
         if (version >= 2) return state;
 
         // v1 kept one plain-text note per bubble and per week cell. Lift each
@@ -319,7 +377,7 @@ export const usePlan = create<PlanStore>()(
         }
 
         await Promise.allSettled(writes);
-        return { ...state, weeks, pages: state.pages ?? [], notes };
+        return { ...state, weeks, pages: state.pages ?? [], notes, widgets: state.widgets };
       },
     },
   ),
@@ -340,6 +398,7 @@ export function parsePlan(text: string): (PlanState & { noteBodies?: unknown }) 
       weeks: data.weeks ?? {},
       pages: data.pages ?? [],
       notes: data.notes ?? {},
+      widgets: data.widgets?.length ? data.widgets : defaultWidgets(),
       noteBodies: data.noteBodies,
     };
   } catch {

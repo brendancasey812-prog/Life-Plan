@@ -2,10 +2,15 @@
 
 /* ── Palette ────────────────────────────────────────────────────────────────
    Each colour is written once, light value first, and `light-dark()` picks
-   between them from the root's `color-scheme`. That means the default —
-   following the device — is handled entirely in CSS: correct on the very
-   first paint, with no script and no flash, and it follows the device live
-   without a listener. The two classes exist only to override that choice. */
+   between them from the root's `color-scheme`. So following the device needs
+   no JavaScript: it is right on the very first paint and keeps up when the
+   device flips, with no script and no listener. The two classes exist only to
+   override that choice.
+
+   The palette is deliberately quiet — desaturated sage, slate and clay rather
+   than saturated primaries. Surfaces are semi-opaque and sit over the page
+   wash with a blur behind them, so a card reads as solid and shaded without
+   being a flat block of colour. */
 
 :root {
   color-scheme: light dark;
@@ -15,69 +20,72 @@
      one switch rather than being written out per theme. */
   --dk: 0;
 
-  --fg: light-dark(#14161d, #e8e9f0);
-  --muted: light-dark(#565d6c, #a6acbb);
-  --faint: light-dark(#8b91a1, #767d8d);
+  --fg: light-dark(#23272e, #e3e6ea);
+  --muted: light-dark(#5d6570, #a3aab5);
+  --faint: light-dark(#8e959f, #737a85);
 
-  --surface: light-dark(rgb(17 22 44 / 0.035), rgb(255 255 255 / 0.04));
-  --surface-2: light-dark(rgb(17 22 44 / 0.07), rgb(255 255 255 / 0.09));
-  --surface-3: light-dark(rgb(17 22 44 / 0.12), rgb(255 255 255 / 0.16));
-  --edge: light-dark(rgb(17 22 44 / 0.12), rgb(255 255 255 / 0.09));
-  --edge-2: light-dark(rgb(17 22 44 / 0.26), rgb(255 255 255 / 0.22));
+  /* Semi-opaque, and blurred behind by `.pane`. */
+  --surface: light-dark(rgb(255 255 255 / 0.58), rgb(148 163 184 / 0.07));
+  --surface-2: light-dark(rgb(255 255 255 / 0.85), rgb(148 163 184 / 0.13));
+  --surface-3: light-dark(rgb(35 39 46 / 0.1), rgb(148 163 184 / 0.2));
+  --edge: light-dark(rgb(35 39 46 / 0.1), rgb(226 232 240 / 0.1));
+  --edge-2: light-dark(rgb(35 39 46 / 0.24), rgb(226 232 240 / 0.24));
 
-  --sheet: light-dark(#ffffff, #0c0e15);
-  --scrim: light-dark(rgb(20 22 32 / 0.35), rgb(0 0 0 / 0.66));
+  --sheet: light-dark(rgb(250 250 248 / 0.94), rgb(20 23 29 / 0.94));
+  --scrim: light-dark(rgb(38 42 48 / 0.3), rgb(6 8 11 / 0.62));
 
-  --accent: light-dark(#4f46e5, #6366f1);
-  --accent-soft: light-dark(rgb(79 70 229 / 0.13), rgb(99 102 241 / 0.22));
-  --accent-ink: light-dark(#4338ca, #a5b4fc);
+  /* Sage-teal, clay, moss — quiet enough to live under text all day. */
+  --accent: light-dark(#4f7d74, #7aa89d);
+  --accent-soft: light-dark(rgb(79 125 116 / 0.14), rgb(122 168 157 / 0.18));
+  --accent-ink: light-dark(#3c6259, #93bcb1);
 
-  --danger: light-dark(#e11d48, #f43f5e);
-  --danger-soft: light-dark(rgb(225 29 72 / 0.14), rgb(244 63 94 / 0.22));
-  --danger-ink: light-dark(#be123c, #fda4af);
-  --done: light-dark(#059669, #10b981);
+  --danger: light-dark(#a8544b, #c9857c);
+  --danger-soft: light-dark(rgb(168 84 75 / 0.14), rgb(201 133 124 / 0.18));
+  --danger-ink: light-dark(#8c433c, #dba9a2);
+  --done: light-dark(#5c8058, #87ab81);
 
   /* Week grid cells. */
-  --cell: light-dark(rgb(17 22 44 / 0.06), rgb(255 255 255 / 0.05));
-  --cell-past: light-dark(rgb(17 22 44 / 0.24), rgb(255 255 255 / 0.25));
-  --cell-hover: light-dark(rgb(17 22 44 / 0.4), rgb(255 255 255 / 0.45));
+  --cell: light-dark(rgb(35 39 46 / 0.055), rgb(226 232 240 / 0.05));
+  --cell-past: light-dark(rgb(35 39 46 / 0.2), rgb(226 232 240 / 0.22));
+  --cell-hover: light-dark(rgb(35 39 46 / 0.36), rgb(226 232 240 / 0.4));
 
-  --note-mark: light-dark(rgb(250 204 21 / 0.45), rgb(250 204 21 / 0.32));
-  --note-strong: light-dark(#05070c, #ffffff);
+  --note-mark: light-dark(rgb(214 186 108 / 0.45), rgb(214 186 108 / 0.28));
+  --note-strong: light-dark(#12151a, #f4f6f8);
 
   /* Bubbles. `on` is a normal bubble, `dim` the one held at the centre; both
-     stay dark enough for their white labels in either theme. */
-  --b-on-s: calc(72% + var(--dk) * 10%);
-  --b-on-s2: calc(66% + var(--dk) * 4%);
-  --b-on-l1: calc(56% + var(--dk) * 6%);
-  --b-on-l2: calc(38% - var(--dk) * 4%);
-  --b-on-a: calc(1 - var(--dk) * 0.12);
-  --b-dim-s: 48%;
-  --b-dim-s2: 42%;
-  --b-dim-l1: calc(52% - var(--dk) * 6%);
-  --b-dim-l2: calc(38% - var(--dk) * 12%);
-  --b-dim-a: calc(1 - var(--dk) * 0.15);
-  --b-ring-l: calc(45% + var(--dk) * 25%);
-  --b-ring-a: calc(0.32 - var(--dk) * 0.04);
-  --b-shadow-a: calc(0.35 + var(--dk) * 0.4);
+     stay dark enough for their white labels in either theme, and both are
+     muted well below a primary so a ring of them reads calm. */
+  --b-on-s: calc(34% + var(--dk) * 6%);
+  --b-on-s2: calc(30% + var(--dk) * 4%);
+  --b-on-l1: calc(52% + var(--dk) * 6%);
+  --b-on-l2: calc(36% - var(--dk) * 4%);
+  --b-on-a: calc(1 - var(--dk) * 0.1);
+  --b-dim-s: 22%;
+  --b-dim-s2: 18%;
+  --b-dim-l1: calc(50% - var(--dk) * 6%);
+  --b-dim-l2: calc(36% - var(--dk) * 12%);
+  --b-dim-a: calc(1 - var(--dk) * 0.14);
+  --b-ring-l: calc(42% + var(--dk) * 26%);
+  --b-ring-a: calc(0.26 - var(--dk) * 0.04);
+  --b-shadow-a: calc(0.28 + var(--dk) * 0.34);
 
   --page-bg:
     radial-gradient(
-      1100px 640px at 8% -10%,
-      light-dark(rgb(99 102 241 / 0.13), rgb(99 102 241 / 0.16)),
-      transparent 60%
+      1200px 700px at 6% -12%,
+      light-dark(rgb(79 125 116 / 0.11), rgb(79 125 116 / 0.16)),
+      transparent 62%
     ),
     radial-gradient(
-      950px 560px at 100% 0%,
-      light-dark(rgb(168 85 247 / 0.09), rgb(168 85 247 / 0.11)),
-      transparent 55%
+      980px 580px at 102% 2%,
+      light-dark(rgb(122 132 156 / 0.12), rgb(110 124 156 / 0.14)),
+      transparent 58%
     ),
     radial-gradient(
-      900px 900px at 85% 110%,
-      light-dark(rgb(20 184 166 / 0.09), rgb(56 189 248 / 0.08)),
+      900px 900px at 84% 112%,
+      light-dark(rgb(168 140 108 / 0.1), rgb(120 104 84 / 0.12)),
       transparent 60%
     ),
-    light-dark(#fbfbfd, #07080d);
+    light-dark(#eeece7, #101318);
 }
 
 /* An explicit choice, which is all these classes do. */
@@ -96,6 +104,13 @@
   :root:not(.light) {
     --dk: 1;
   }
+}
+
+/* A panel that sits over the page wash rather than covering it. The blur is
+   what lets the surfaces stay semi-opaque and still read as solid. */
+.pane {
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
 }
 
 @theme inline {

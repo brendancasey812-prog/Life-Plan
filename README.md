@@ -11,7 +11,8 @@ network call; export a JSON copy from **Settings** to move it.
 
 | Tab | What it does |
 | --- | --- |
-| **My Life** | One `My Life` bubble. Open it for every decade, a decade for its years, a year for its months — and add your own bubbles at any depth. |
+| **My Life** | The entry tab: a board of widgets you arrange yourself. |
+| **Bubbles** | One `My Life` bubble. Open it for every decade, a decade for its years, a year for its months — and add your own bubbles at any depth. |
 | **Weeks** | Rows are ages 0 – 100, columns are the 52 weeks of each year. Click any week to write down what it is for and tick it off. |
 | **Life Map** | The areas the plan is built around: Personal Health (mental, physical, sexual), Outdoors (camping and hiking, biking, eco footprint), Music, Finance and Craftmanship. |
 | **Yearly Goals — 2026** | A notepad for this year, with picture boxes beside it. |
@@ -20,6 +21,14 @@ network call; export a JSON copy from **Settings** to move it.
 
 A settings box sits in the top-right corner of every tab: light / dark /
 system, your name, date of birth, how far to plan, and export / import / reset.
+
+## Colour
+
+The palette is deliberately quiet: desaturated sage, slate and clay rather
+than saturated primaries, and bubbles muted well below a primary so a ring of
+them reads calm. Surfaces are semi-opaque and blurred behind (`.pane`), so a
+card sits over the page wash instead of covering it — solid and shaded rather
+than a flat block.
 
 ## Light and dark
 
@@ -47,6 +56,28 @@ needs a blocking script, and Next strips an inline one from the tree while
 [`scripts/inline-theme.mjs`](scripts/inline-theme.mjs) injects one into every
 exported page after the build. Without it the only cost would be a blink of
 the device's theme, and only for someone whose choice disagrees with it.
+
+## The entry tab
+
+**My Life** is a board of cards. Hit **Customise** to add widgets, drag them
+into order, set each one to span one, two or three columns, or drop one you do
+not want; the layout is saved with everything else, and **Reset layout** puts
+the default back. The same widget can appear more than once.
+
+| Widget | What it shows |
+| --- | --- |
+| **Age** | How old you are, how far through this year of your life, and how long until the next birthday. |
+| **Month & year** | Today's date, and which week of your year it falls in. |
+| **Yearly goals** | This year's page. |
+| **Monthly goals** | This month's page. |
+| **Weeks lived** | How much of the 100-year grid is behind you. |
+| **My Life bubbles** | Into the decades. |
+| **Life Map** | The areas you build around. |
+| **Recent pages** | What you wrote last. |
+
+The two goal widgets are not summaries of anything — they read the very page
+the goal tabs and the bubbles open, so a line written on any of the three
+shows up on the other two, and the widget names the bubble it came from.
 
 ## Bubbles
 

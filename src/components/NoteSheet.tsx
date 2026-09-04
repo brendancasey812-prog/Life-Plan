@@ -39,7 +39,7 @@ export function NoteSheet({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-scrim backdrop-blur-sm">
-      <div className="mx-auto flex h-full w-full max-w-5xl flex-col border-x border-edge bg-sheet shadow-2xl">
+      <div className="pane mx-auto flex h-full w-full max-w-5xl flex-col border-x border-edge bg-sheet shadow-2xl">
         <header className="flex shrink-0 items-start gap-3 border-b border-edge px-5 py-3.5 sm:px-8">
           <div className="min-w-0 flex-1">
             {onRename ? (

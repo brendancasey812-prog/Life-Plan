@@ -61,7 +61,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         className="absolute inset-0 bg-scrim backdrop-blur-sm"
       />
-      <aside className="relative flex h-full w-full max-w-sm flex-col gap-6 overflow-y-auto border-l border-edge bg-sheet p-6 shadow-2xl">
+      <aside className="pane relative flex h-full w-full max-w-sm flex-col gap-6 overflow-y-auto border-l border-edge bg-sheet p-6 shadow-2xl">
         <header className="flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight">Settings</h2>
           <button

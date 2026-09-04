@@ -127,7 +127,7 @@ export function Notebook() {
                 <li key={entry.key}>
                   <button
                     onClick={() => setOpenKey(entry.key)}
-                    className="flex h-full w-full flex-col gap-1.5 rounded-xl border border-edge bg-surface p-4 text-left transition hover:border-edge2 hover:bg-surface2"
+                    className="pane flex h-full w-full flex-col gap-1.5 rounded-xl border border-edge bg-surface p-4 text-left transition hover:border-edge2 hover:bg-surface2"
                   >
                     <span className="flex items-center gap-2">
                       <Icon size={14} className="shrink-0 text-accentink" />

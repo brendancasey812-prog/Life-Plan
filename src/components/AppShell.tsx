@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CalendarRange,
   Compass,
+  LayoutGrid,
   NotebookPen,
   Settings,
   Sparkles,
@@ -17,7 +18,8 @@ import { useHydrated } from "@/lib/hydrated";
 import { SettingsPanel } from "./SettingsPanel";
 
 const nav = [
-  { href: "/", label: "My Life", icon: Sparkles },
+  { href: "/", label: "My Life", icon: LayoutGrid },
+  { href: "/life", label: "Bubbles", icon: Sparkles },
   { href: "/weeks", label: "Weeks", icon: CalendarRange },
   { href: "/map", label: "Life Map", icon: Compass },
   { href: "/year", label: "Yearly Goals", icon: Target },
@@ -45,7 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex shrink-0 items-center gap-3 border-b border-edge px-3 py-3 backdrop-blur-xl sm:px-5">
+      <header className="pane flex shrink-0 items-center gap-3 border-b border-edge px-3 py-3 sm:px-5">
         <span className="hidden shrink-0 text-sm font-semibold tracking-tight text-muted xl:block">
           Life&nbsp;Plan
         </span>

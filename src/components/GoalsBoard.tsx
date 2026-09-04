@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ImageIcon, Sparkles } from "lucide-react";
-import { currentPeriod, findTimeline, trailOf } from "@/lib/goals";
-import { bubbleNoteKey } from "@/lib/notes";
-import { usePlan } from "@/lib/store";
+import { useGoalPage, type Scope } from "@/lib/useGoalPage";
 import { NoteEditor } from "./NoteEditor";
 import { NoteGallery } from "./NoteGallery";
 
-export type Scope = "year" | "month";
+export type { Scope };
 
 /**
  * A notepad for this year's or this month's goals. It is not a separate copy:
@@ -17,28 +14,9 @@ export type Scope = "year" | "month";
  * bubble in My Life, so writing here shows up there and the other way round.
  */
 export function GoalsBoard({ scope }: { scope: Scope }) {
-  const tree = usePlan((s) => s.trees.life);
-  const { birthDate, lifespan } = usePlan((s) => s.settings);
-  const resolveTimeline = usePlan((s) => s.resolveTimeline);
+  const { period, noteKey, trail } = useGoalPage(scope);
 
-  const period = useMemo(
-    () => currentPeriod(birthDate, lifespan)[scope === "year" ? 0 : 1],
-    [birthDate, lifespan, scope],
-  );
-  const found = useMemo(
-    () => findTimeline(tree, period.age, period.month),
-    [tree, period.age, period.month],
-  );
-
-  // The timeline is built as it is opened, so a period nobody has visited has
-  // no bubble yet. Building it here is what ties the two views together.
-  useEffect(() => {
-    if (!found.complete) resolveTimeline(period.age, period.month);
-  }, [found.complete, period.age, period.month, resolveTimeline]);
-
-  const bubbleId = scope === "year" ? found.yearId : found.monthId;
-
-  if (!bubbleId) {
+  if (!noteKey) {
     return (
       <div className="flex h-full items-center justify-center px-6">
         <div className="max-w-sm text-center">
@@ -47,24 +25,22 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
             in My Life to attach this to — it looks like it was renamed or deleted.
           </p>
           <Link
-            href="/"
+            href="/life"
             className="mt-3 inline-block text-sm text-accentink underline underline-offset-4"
           >
-            Open My Life
+            Open the bubbles
           </Link>
         </div>
       </div>
     );
   }
 
-  const noteKey = bubbleNoteKey("life", bubbleId);
-  const trail = trailOf(tree, bubbleId);
   const [eyebrow, heading] = period.title.split(" — ");
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
-        <header className="relative overflow-hidden rounded-2xl border border-edge px-5 py-5 sm:px-7">
+        <header className="pane relative overflow-hidden rounded-2xl border border-edge px-5 py-5 sm:px-7">
           <div
             className="pointer-events-none absolute inset-0 -z-10"
             style={{
@@ -78,7 +54,7 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
           <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{heading}</h1>
             <Link
-              href="/"
+              href="/life"
               className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
             >
               <Sparkles size={13} className="text-accentink" />
@@ -92,7 +68,7 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
         </header>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-          <section className="flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border border-edge bg-surface lg:min-h-[34rem]">
+          <section className="pane flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border border-edge bg-surface lg:min-h-[34rem]">
             <NoteEditor
               noteKey={noteKey}
               placeholder={
@@ -103,7 +79,7 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
             />
           </section>
 
-          <section className="rounded-2xl border border-edge bg-surface p-4 sm:p-5">
+          <section className="pane rounded-2xl border border-edge bg-surface p-4 sm:p-5">
             <h2 className="flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-muted uppercase">
               <ImageIcon size={14} className="text-accentink" /> Pictures
             </h2>
