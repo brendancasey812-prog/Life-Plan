@@ -18,7 +18,7 @@ import { useHydrated } from "@/lib/hydrated";
 import { SettingsPanel } from "./SettingsPanel";
 
 const nav = [
-  { href: "/", label: "My Life", icon: LayoutGrid },
+  { href: "/", label: "Overview", icon: LayoutGrid },
   { href: "/life", label: "Life Plan", icon: Sparkles },
   { href: "/weeks", label: "Weeks", icon: CalendarRange },
   { href: "/map", label: "Life Categories", icon: Compass },

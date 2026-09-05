@@ -61,24 +61,24 @@ function AgeWidget() {
   return (
     <div className="flex h-full flex-col justify-center gap-4 sm:flex-row sm:items-center sm:gap-8">
       <div className="flex items-baseline gap-3">
-        <span className="text-6xl leading-none font-semibold tracking-tight tabular-nums sm:text-7xl">
+        <span className="text-7xl leading-none font-semibold tracking-tight tabular-nums sm:text-8xl">
           {age}
         </span>
-        <span className="text-sm text-muted">
+        <span className="text-base text-muted">
           years old
-          {name ? <span className="block text-faint">{name}</span> : null}
+          {name ? <span className="block text-sm text-faint">{name}</span> : null}
         </span>
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between text-xs text-muted">
+        <div className="flex items-baseline justify-between text-sm text-muted">
           <span>
             Week {week + 1} of your {ordinal(age + 1)} year
           </span>
           <span className="tabular-nums">{through}%</span>
         </div>
         <Meter value={through} />
-        <p className="mt-2 text-xs text-faint">
+        <p className="mt-2.5 text-sm text-faint">
           {WEEKS_PER_YEAR - week} weeks until you turn {age + 1}.
         </p>
       </div>
@@ -92,14 +92,14 @@ function DateWidget() {
   const { week } = currentCell(birthDate);
   return (
     <div className="flex h-full flex-col justify-center">
-      <p className="text-xs tracking-[0.14em] text-faint uppercase">
+      <p className="text-sm tracking-[0.14em] text-faint uppercase">
         {now.toLocaleDateString(undefined, { weekday: "long" })}
       </p>
-      <p className="mt-1 text-3xl font-semibold tracking-tight">
+      <p className="mt-1.5 text-4xl font-semibold tracking-tight">
         {MONTHS[now.getMonth()]} {now.getDate()}
       </p>
-      <p className="text-lg text-muted tabular-nums">{now.getFullYear()}</p>
-      <p className="mt-2 text-xs text-faint">Week {week + 1} of this year of your life</p>
+      <p className="text-2xl text-muted tabular-nums">{now.getFullYear()}</p>
+      <p className="mt-2.5 text-sm text-faint">Week {week + 1} of this year of your life</p>
     </div>
   );
 }
@@ -114,19 +114,19 @@ function GoalWidget({ scope }: { scope: Scope }) {
     <Link href={href} className="flex h-full flex-col">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium tracking-[0.14em] text-accentink uppercase">
+          <p className="text-xs font-medium tracking-[0.14em] text-accentink uppercase">
             {eyebrow}
           </p>
-          <h3 className="text-lg font-semibold tracking-tight">{heading}</h3>
+          <h3 className="text-2xl font-semibold tracking-tight">{heading}</h3>
         </div>
-        <ArrowUpRight size={15} className="mt-1 shrink-0 text-faint" />
+        <ArrowUpRight size={17} className="mt-1.5 shrink-0 text-faint" />
       </div>
-      <p className="truncate text-xs text-faint">{trail.join("  ›  ") || "Life Plan"}</p>
-      <p className="mt-2.5 line-clamp-4 flex-1 text-sm text-muted">
+      <p className="truncate text-sm text-faint">{trail.join("  ›  ") || "Life Plan"}</p>
+      <p className="mt-3 line-clamp-5 flex-1 text-base text-muted">
         {meta?.excerpt || (meta?.images ? "" : "Nothing written yet — open it to start.")}
       </p>
       {!!meta?.images && (
-        <span className="mt-2 flex items-center gap-1.5 text-xs text-faint">
+        <span className="mt-2.5 flex items-center gap-1.5 text-sm text-faint">
           <ImageIcon size={13} /> {meta.images} picture{meta.images === 1 ? "" : "s"}
         </span>
       )}
@@ -142,15 +142,15 @@ function WeeksWidget() {
   return (
     <Link href="/weeks" className="flex h-full flex-col justify-center">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">Weeks lived</h3>
-        <ArrowUpRight size={15} className="shrink-0 text-faint" />
+        <h3 className="text-base font-medium">Weeks lived</h3>
+        <ArrowUpRight size={17} className="shrink-0 text-faint" />
       </div>
-      <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular-nums">
+      <p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums">
         {lived.toLocaleString()}
-        <span className="text-base font-normal text-faint"> / {total.toLocaleString()}</span>
+        <span className="text-xl font-normal text-faint"> / {total.toLocaleString()}</span>
       </p>
       <Meter value={pct} />
-      <p className="mt-2 text-xs text-faint">
+      <p className="mt-2.5 text-sm text-faint">
         {pct}% of a {lifespan}-year life
       </p>
     </Link>
@@ -163,12 +163,12 @@ function BubblesWidget() {
   return (
     <Link href="/life" className="flex h-full flex-col justify-center">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">Life Plan</h3>
-        <ArrowUpRight size={15} className="shrink-0 text-faint" />
+        <h3 className="text-base font-medium">Life Plan</h3>
+        <ArrowUpRight size={17} className="shrink-0 text-faint" />
       </div>
       <div className="mt-3 flex items-center gap-1.5">
         {[0, 1, 2, 3].map((i) => {
-          const size = 34 - i * 6;
+          const size = 46 - i * 8;
           return (
             <span
               key={i}
@@ -178,7 +178,7 @@ function BubblesWidget() {
           );
         })}
       </div>
-      <p className="mt-3 text-xs text-faint">
+      <p className="mt-3.5 text-sm text-faint">
         {opened > 0 ? `${opened} bubbles so far` : "Decades, years and months"}
       </p>
     </Link>
@@ -193,14 +193,14 @@ function LifeMapWidget() {
   return (
     <Link href="/map" className="flex h-full flex-col">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">Life Categories</h3>
-        <ArrowUpRight size={15} className="shrink-0 text-faint" />
+        <h3 className="text-base font-medium">Life Categories</h3>
+        <ArrowUpRight size={17} className="shrink-0 text-faint" />
       </div>
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
+      <div className="mt-3 flex flex-wrap gap-2">
         {areas.map((a) => (
           <span
             key={a.id}
-            className="rounded-full px-2.5 py-1 text-xs"
+            className="rounded-full px-3 py-1.5 text-sm"
             style={{
               background: `hsl(${a.hue} var(--b-on-s) var(--b-on-l1) / 0.22)`,
               boxShadow: `inset 0 0 0 1px hsl(${a.hue} var(--b-on-s) var(--b-on-l1) / 0.35)`,
@@ -223,15 +223,15 @@ function RecentNotesWidget() {
   return (
     <Link href="/notes" className="flex h-full flex-col">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">Recent pages</h3>
-        <ArrowUpRight size={15} className="shrink-0 text-faint" />
+        <h3 className="text-base font-medium">Recent pages</h3>
+        <ArrowUpRight size={17} className="shrink-0 text-faint" />
       </div>
       {recent.length === 0 ? (
-        <p className="mt-2.5 text-sm text-faint">Nothing written yet.</p>
+        <p className="mt-3 text-base text-faint">Nothing written yet.</p>
       ) : (
-        <ul className="mt-2.5 space-y-1.5">
+        <ul className="mt-3 space-y-2">
           {recent.map(([key, meta]) => (
-            <li key={key} className="truncate text-sm text-muted">
+            <li key={key} className="line-clamp-2 text-base text-muted">
               {meta.excerpt || "A page of pictures"}
             </li>
           ))}
@@ -244,7 +244,7 @@ function RecentNotesWidget() {
 function Meter({ value }: { value: number }) {
   return (
     <div
-      className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface3"
+      className="mt-2 h-2.5 overflow-hidden rounded-full bg-surface3"
       role="progressbar"
       aria-valuenow={value}
       aria-valuemin={0}

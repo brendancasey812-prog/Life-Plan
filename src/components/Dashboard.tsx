@@ -30,7 +30,7 @@ export function Dashboard() {
     <div className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
         <header className="mb-4 flex items-center gap-3">
-          <h1 className="flex-1 text-lg font-semibold tracking-tight">My Life</h1>
+          <h1 className="flex-1 text-2xl font-semibold tracking-tight">Overview</h1>
           {editing && (
             <button
               onClick={resetWidgets}
@@ -99,7 +99,7 @@ export function Dashboard() {
             No widgets. Hit <span className="text-muted">Customise</span> to add some.
           </p>
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {widgets.map((w) => (
               <li
                 key={w.id}
@@ -155,7 +155,7 @@ function WidgetCard({
   const { label } = WIDGETS[widget.kind];
   return (
     <div
-      className={`relative h-full min-h-[8.5rem] rounded-2xl border border-edge bg-surface pane p-4 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_28px_-20px_rgb(0_0_0/0.35)] transition sm:p-5 ${
+      className={`relative h-full min-h-[11.5rem] rounded-2xl border border-edge bg-surface pane p-5 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_28px_-20px_rgb(0_0_0/0.35)] transition sm:p-6 ${
         editing ? "cursor-grab active:cursor-grabbing" : ""
       }`}
     >
