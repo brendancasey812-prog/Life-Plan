@@ -88,10 +88,10 @@ light on the near edge, and a cast shadow so it sits above the page rather
 than on it. Because that shading is drawn with shadows, whose sizes are in
 pixels, it is scaled to each planet's radius.
 
-Each one also gets a surface of its own — belts, mottling, a swirl, cratering,
-or nothing — picked from its id, so a planet keeps the same face for good. The
-colour is untouched: hue, saturation and lightness still come from the palette
-variables, so both themes are handled where they always were.
+There are no surface markings — the colour carries it — and every planet is
+lit from the same direction, as one sun would. The colour is untouched: hue,
+saturation and lightness still come from the palette variables, so both themes
+are handled where they always were.
 
 ## Bubbles
 

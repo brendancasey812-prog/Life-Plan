@@ -173,7 +173,7 @@ function BubblesWidget() {
             <span
               key={i}
               className="rounded-full"
-              style={{ width: size, height: size, ...planetStyle(190 + i * 26, size / 2, `w${i}`) }}
+              style={{ width: size, height: size, ...planetStyle(190 + i * 26, size / 2) }}
             />
           );
         })}

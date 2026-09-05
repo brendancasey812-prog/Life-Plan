@@ -173,7 +173,7 @@ export function BubbleBoard({
                   top: box.h / 2 - cR,
                   width: cR * 2,
                   height: cR * 2,
-                  ...planetStyle(focus.hue, cR, focus.id, true),
+                  ...planetStyle(focus.hue, cR, true),
                 }}
               >
                 <Label
@@ -208,7 +208,7 @@ export function BubbleBoard({
                       className="flex h-full w-full items-center justify-center rounded-full"
                       style={
                         node
-                          ? planetStyle(node.hue, spot.r, node.id)
+                          ? planetStyle(node.hue, spot.r)
                           : { border: "2px dashed var(--edge-2)" }
                       }
                     >
@@ -225,7 +225,7 @@ export function BubbleBoard({
                     <button
                       onClick={() => open(node.id)}
                       className="flex h-full w-full items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-2 focus:outline-accent"
-                      style={planetStyle(node.hue, spot.r, node.id)}
+                      style={planetStyle(node.hue, spot.r)}
                     >
                       <Label
                         node={node}
@@ -326,7 +326,7 @@ function HeroBubble({
       <button
         onClick={onOpen}
         className="bubble flex items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-4 focus:outline-accent"
-        style={{ width: radius * 2, height: radius * 2, ...planetStyle(node.hue, radius, node.id) }}
+        style={{ width: radius * 2, height: radius * 2, ...planetStyle(node.hue, radius) }}
       >
         <span
           className="bubble-label px-6 font-semibold tracking-tight text-white"
