@@ -19,6 +19,12 @@ network call; export a JSON copy from **Settings** to move it.
 | **Monthly Goals — September 2026** | The same, for this month. |
 | **Notes** | Every page in one place — the ones hanging off bubbles and weeks, plus any you start on their own — searchable across their whole text. |
 
+The wordmark goes to the Overview from anywhere, and clicking the tab you are
+already on takes that screen back to its home — out of a planet you drilled
+into, out of a search, back to this week, out of Customise. Navigating to the
+route you are on is a no-op, so the header announces the click and each screen
+decides what home means for it ([`src/lib/goHome.ts`](src/lib/goHome.ts)).
+
 A settings box sits in the top-right corner of every tab: light / dark /
 system, your name, date of birth, how far to plan, and export / import / reset.
 

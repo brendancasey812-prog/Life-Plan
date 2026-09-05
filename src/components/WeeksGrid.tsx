@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Check, ImageIcon, NotebookPen } from "lucide-react";
+import { useGoHome } from "@/lib/goHome";
 import { weekNoteKey } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
 import { WEEKS_PER_YEAR, currentCell, formatRange, weekKey } from "@/lib/weeks";
@@ -29,6 +31,13 @@ export function WeeksGrid() {
   useEffect(() => {
     rowRef.current?.scrollIntoView({ block: "center" });
   }, []);
+
+  const pathname = usePathname();
+  useGoHome(pathname, () => {
+    setSelected(null);
+    setNotesOpen(false);
+    rowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
 
   const ages = Array.from({ length: lifespan + 1 }, (_, i) => i);
   const cols = Array.from({ length: WEEKS_PER_YEAR }, (_, i) => i);

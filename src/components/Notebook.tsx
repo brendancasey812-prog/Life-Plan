@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CalendarRange, FileText, ImageIcon, Plus, Search, Sparkles } from "lucide-react";
+import { useGoHome } from "@/lib/goHome";
 import { deleteNotes, pageNoteKey } from "@/lib/notes";
 import { pageTitle, usePlan } from "@/lib/store";
 import type { NoteMeta, TreeId } from "@/lib/types";
@@ -37,6 +39,14 @@ export function Notebook() {
 
   const [query, setQuery] = useState("");
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const pathname = usePathname();
+  useGoHome(pathname, () => {
+    setQuery("");
+    setOpenKey(null);
+    listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   const entries = useMemo<Entry[]>(() => {
     const out: Entry[] = pages.map((p) => ({
@@ -112,7 +122,7 @@ export function Notebook() {
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
         {shown.length === 0 ? (
           <p className="py-16 text-center text-sm text-faint">
             {q

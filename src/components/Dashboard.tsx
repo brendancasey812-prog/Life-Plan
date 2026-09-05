@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Check, GripVertical, LayoutGrid, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { useGoHome } from "@/lib/goHome";
 import { usePlan } from "@/lib/store";
 import type { Widget, WidgetKind } from "@/lib/types";
 import { WIDGETS, WidgetBody } from "./widgets";
@@ -25,9 +26,16 @@ export function Dashboard() {
   const [adding, setAdding] = useState(false);
   const dragged = useRef<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useGoHome("/", () => {
+    setEditing(false);
+    setAdding(false);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
         <header className="mb-4 flex items-center gap-3">
           <h1 className="flex-1 text-2xl font-semibold tracking-tight">Overview</h1>

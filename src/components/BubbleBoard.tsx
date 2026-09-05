@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ChevronLeft, ImageIcon, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
+import { useGoHome } from "@/lib/goHome";
 import { centreRadius, ringLayout } from "@/lib/layout";
 import { planetStyle } from "@/lib/planet";
 import { bubbleNoteKey, deleteNotes } from "@/lib/notes";
@@ -48,6 +50,15 @@ export function BubbleBoard({
   const [draft, setDraft] = useState("");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
+
+  const pathname = usePathname();
+  useGoHome(pathname, () => {
+    setFocusId(showRoot ? null : tree.rootId);
+    setNotesOpen(false);
+    setPendingDelete(null);
+    editingRef.current = null;
+    setEditingId(null);
+  });
 
   const boxRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });

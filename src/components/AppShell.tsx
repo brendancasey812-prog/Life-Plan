@@ -14,6 +14,7 @@ import {
   Target,
 } from "lucide-react";
 import { MONTHS } from "@/lib/seed";
+import { goHome } from "@/lib/goHome";
 import { useHydrated } from "@/lib/hydrated";
 import { SettingsPanel } from "./SettingsPanel";
 
@@ -48,9 +49,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col">
       <header className="pane flex shrink-0 items-center gap-3 border-b border-edge px-3 py-3 sm:px-5">
-        <span className="hidden shrink-0 text-sm font-semibold tracking-tight text-muted xl:block">
+        <Link
+          href="/"
+          onClick={() => goHome("/")}
+          className="hidden shrink-0 text-sm font-semibold tracking-tight text-muted transition hover:text-fg xl:block"
+        >
           Life&nbsp;Plan
-        </span>
+        </Link>
 
         <nav className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {nav.map(({ href, label, icon: Icon }) => {
@@ -60,6 +65,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
+                // Already here: send the screen home instead of navigating.
+                onClick={() => active && goHome(href)}
                 className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
                   active
                     ? "bg-accentsoft text-accentink"
