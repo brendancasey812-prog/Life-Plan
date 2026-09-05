@@ -328,7 +328,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 3,
+      version: 4,
       partialize: (s): PlanState => ({
         settings: s.settings,
         trees: s.trees,
@@ -342,6 +342,16 @@ export const usePlan = create<PlanStore>()(
         // The entry tab became a widget board; a plan from before it gets the
         // default layout.
         if (!state.widgets?.length) state.widgets = defaultWidgets();
+
+        // The two roots were renamed. Only rename one that still carries its
+        // old default — anything the user chose themselves is theirs.
+        const rename = (treeId: TreeId, was: string, now: string) => {
+          const tree = state.trees?.[treeId];
+          const root = tree?.nodes[tree.rootId];
+          if (root?.label === was) root.label = now;
+        };
+        rename("life", "My Life", "Life Plan");
+        rename("map", "Life Map", "Life Categories");
         if (version >= 2) return state;
 
         // v1 kept one plain-text note per bubble and per week cell. Lift each

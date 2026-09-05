@@ -19,9 +19,9 @@ import { SettingsPanel } from "./SettingsPanel";
 
 const nav = [
   { href: "/", label: "My Life", icon: LayoutGrid },
-  { href: "/life", label: "Bubbles", icon: Sparkles },
+  { href: "/life", label: "Life Plan", icon: Sparkles },
   { href: "/weeks", label: "Weeks", icon: CalendarRange },
-  { href: "/map", label: "Life Map", icon: Compass },
+  { href: "/map", label: "Life Categories", icon: Compass },
   { href: "/year", label: "Yearly Goals", icon: Target },
   { href: "/month", label: "Monthly Goals", icon: CalendarDays },
   { href: "/notes", label: "Notes", icon: NotebookPen },

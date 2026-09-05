@@ -12,6 +12,7 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
+import { planetStyle } from "@/lib/planet";
 import { MONTHS } from "@/lib/seed";
 import { usePlan } from "@/lib/store";
 import type { NoteMeta, WidgetKind } from "@/lib/types";
@@ -24,8 +25,8 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
   yearGoals: { label: "Yearly goals", hint: "This year's page", icon: Target },
   monthGoals: { label: "Monthly goals", hint: "This month's page", icon: CalendarDays },
   weeks: { label: "Weeks lived", hint: "The 100-year grid, in one bar", icon: CalendarRange },
-  bubbles: { label: "My Life bubbles", hint: "Into the decades", icon: Sparkles },
-  lifeMap: { label: "Life Map", hint: "The areas you build around", icon: Compass },
+  bubbles: { label: "Life Plan", hint: "Into the decades", icon: Sparkles },
+  lifeMap: { label: "Life Categories", hint: "What you build your life around", icon: Compass },
   recentNotes: { label: "Recent pages", hint: "What you wrote last", icon: NotebookPen },
 };
 
@@ -120,7 +121,7 @@ function GoalWidget({ scope }: { scope: Scope }) {
         </div>
         <ArrowUpRight size={15} className="mt-1 shrink-0 text-faint" />
       </div>
-      <p className="truncate text-xs text-faint">{trail.join("  ›  ") || "My Life"}</p>
+      <p className="truncate text-xs text-faint">{trail.join("  ›  ") || "Life Plan"}</p>
       <p className="mt-2.5 line-clamp-4 flex-1 text-sm text-muted">
         {meta?.excerpt || (meta?.images ? "" : "Nothing written yet — open it to start.")}
       </p>
@@ -162,21 +163,20 @@ function BubblesWidget() {
   return (
     <Link href="/life" className="flex h-full flex-col justify-center">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">My Life</h3>
+        <h3 className="text-sm font-medium">Life Plan</h3>
         <ArrowUpRight size={15} className="shrink-0 text-faint" />
       </div>
       <div className="mt-3 flex items-center gap-1.5">
-        {[0, 1, 2, 3].map((i) => (
-          <span
-            key={i}
-            className="rounded-full"
-            style={{
-              width: 34 - i * 6,
-              height: 34 - i * 6,
-              background: `hsl(${190 + i * 26} var(--b-on-s) var(--b-on-l1) / var(--b-on-a))`,
-            }}
-          />
-        ))}
+        {[0, 1, 2, 3].map((i) => {
+          const size = 34 - i * 6;
+          return (
+            <span
+              key={i}
+              className="rounded-full"
+              style={{ width: size, height: size, ...planetStyle(190 + i * 26, size / 2, `w${i}`) }}
+            />
+          );
+        })}
       </div>
       <p className="mt-3 text-xs text-faint">
         {opened > 0 ? `${opened} bubbles so far` : "Decades, years and months"}
@@ -193,7 +193,7 @@ function LifeMapWidget() {
   return (
     <Link href="/map" className="flex h-full flex-col">
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">Life Map</h3>
+        <h3 className="text-sm font-medium">Life Categories</h3>
         <ArrowUpRight size={15} className="shrink-0 text-faint" />
       </div>
       <div className="mt-2.5 flex flex-wrap gap-1.5">

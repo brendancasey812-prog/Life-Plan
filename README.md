@@ -12,9 +12,9 @@ network call; export a JSON copy from **Settings** to move it.
 | Tab | What it does |
 | --- | --- |
 | **My Life** | The entry tab: a board of widgets you arrange yourself. |
-| **Bubbles** | One `My Life` bubble. Open it for every decade, a decade for its years, a year for its months — and add your own bubbles at any depth. |
+| **Life Plan** | One `Life Plan` planet. Open it for every decade, a decade for its years, a year for its months — and add your own at any depth. |
 | **Weeks** | Rows are ages 0 – 100, columns are the 52 weeks of each year. Click any week to write down what it is for and tick it off. |
-| **Life Map** | The areas the plan is built around: Personal Health (mental, physical, sexual), Outdoors (camping and hiking, biking, eco footprint), Music, Finance and Craftmanship. |
+| **Life Categories** | Opens straight onto the categories the plan is built around — Personal Health (mental, physical, sexual), Outdoors (camping and hiking, biking, eco footprint), Music, Finance and Craftmanship — with no parent planet above them. |
 | **Yearly Goals — 2026** | A notepad for this year, with picture boxes beside it. |
 | **Monthly Goals — September 2026** | The same, for this month. |
 | **Notes** | Every page in one place — the ones hanging off bubbles and weeks, plus any you start on their own — searchable across their whole text. |
@@ -71,17 +71,31 @@ the default back. The same widget can appear more than once.
 | **Yearly goals** | This year's page. |
 | **Monthly goals** | This month's page. |
 | **Weeks lived** | How much of the 100-year grid is behind you. |
-| **My Life bubbles** | Into the decades. |
-| **Life Map** | The areas you build around. |
+| **Life Plan** | Into the decades. |
+| **Life Categories** | What you build your life around. |
 | **Recent pages** | What you wrote last. |
 
 The two goal widgets are not summaries of anything — they read the very page
 the goal tabs and the bubbles open, so a line written on any of the three
 shows up on the other two, and the widget names the bubble it came from.
 
+## Planets
+
+Every bubble is drawn as a lit sphere by
+[`src/lib/planet.ts`](src/lib/planet.ts): a diffuse highlight where the light
+falls, a terminator curving away into a dark limb, atmosphere catching the
+light on the near edge, and a cast shadow so it sits above the page rather
+than on it. Because that shading is drawn with shadows, whose sizes are in
+pixels, it is scaled to each planet's radius.
+
+Each one also gets a surface of its own — belts, mottling, a swirl, cratering,
+or nothing — picked from its id, so a planet keeps the same face for good. The
+colour is untouched: hue, saturation and lightness still come from the palette
+variables, so both themes are handled where they always were.
+
 ## Bubbles
 
-Every bubble behaves the same way, whichever tab it is on:
+Every planet behaves the same way, whichever tab it is on:
 
 - **Open** it — click it to drill in. A breadcrumb across the top walks back out.
 - **Add** one — the dashed `+` circle is part of the ring, so a new bubble

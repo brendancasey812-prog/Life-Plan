@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ImageIcon, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { centreRadius, ringLayout } from "@/lib/layout";
+import { planetStyle } from "@/lib/planet";
 import { bubbleNoteKey, deleteNotes } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
 import type { Bubble, NoteMeta, TreeId } from "@/lib/types";
@@ -21,32 +22,16 @@ function subtitleFor(node: Bubble, birthDate: string): string {
   return from === to ? String(from) : `${from} – ${to}`;
 }
 
-/**
- * The same lightness reads very differently by hue — a yellow at 56% is far
- * brighter than a blue at 56%, and the labels are white. This pulls the warm
- * half of the wheel down so every bubble carries its text, and leaves the
- * cool half alone.
- */
-function hueDrop(hue: number): number {
-  const warm = Math.max(0, Math.cos(((hue - 70) * Math.PI) / 180));
-  return +(warm * 16).toFixed(1);
-}
-
-/**
- * A bubble keeps its hue in both themes; only how light, saturated and solid
- * it is comes from the palette. `dim` is the bubble held at the centre.
- */
-function bubbleStyle(hue: number, dim = false) {
-  const v = dim ? "dim" : "on";
-  const d = hueDrop(hue);
-  const l = (n: 1 | 2) => `calc(var(--b-${v}-l${n}) - ${d}%)`;
-  return {
-    background: `radial-gradient(circle at 32% 26%, hsl(${hue} var(--b-${v}-s) ${l(1)} / var(--b-${v}-a)), hsl(${hue} var(--b-${v}-s2) ${l(2)} / var(--b-${v}-a)) 70%)`,
-    boxShadow: `0 0 0 1px hsl(${hue} 70% var(--b-ring-l) / var(--b-ring-a)), 0 12px 34px -12px hsl(${hue} 80% 40% / var(--b-shadow-a))`,
-  };
-}
-
-export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) {
+export function BubbleBoard({
+  treeId,
+  hint,
+  showRoot = true,
+}: {
+  treeId: TreeId;
+  hint: string;
+  /** False opens straight onto the root's children, with no bubble for it. */
+  showRoot?: boolean;
+}) {
   const tree = usePlan((s) => s.trees[treeId]);
   const birthDate = usePlan((s) => s.settings.birthDate);
   const openBubble = usePlan((s) => s.openBubble);
@@ -55,7 +40,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
   const deleteBubble = usePlan((s) => s.deleteBubble);
   const notes = usePlan((s) => s.notes);
 
-  const [focusId, setFocusId] = useState<string | null>(null);
+  const [focusId, setFocusId] = useState<string | null>(showRoot ? null : tree.rootId);
   const [editingId, setEditingId] = useState<string | null>(null);
   // Enter commits and unmounts the input, which then fires blur; the ref lets
   // the second call see that the edit is already done.
@@ -104,8 +89,12 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
   }, [focus, tree]);
 
   // The add circle rides in the ring, so the layout re-solves for it too.
+  const atHiddenRoot = !showRoot && focus?.id === tree.rootId;
   const items = focus ? [...focus.childIds, ADD] : [];
-  const ring = useMemo(() => ringLayout(items.length, box.w, box.h), [items.length, box.w, box.h]);
+  const ring = useMemo(
+    () => ringLayout(items.length, box.w, box.h, !atHiddenRoot),
+    [items.length, box.w, box.h, atHiddenRoot],
+  );
   const cR = centreRadius(box.w, box.h, items.length > 0);
 
   function startEdit(id: string, value: string) {
@@ -139,7 +128,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center gap-2 px-4 py-3 sm:px-6">
-        {focus && (
+        {focus && !atHiddenRoot && (
           <button
             onClick={() => setFocusId(focus.parentId)}
             className="rounded-lg p-1.5 text-muted transition hover:bg-surface2 hover:text-fg"
@@ -149,13 +138,13 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
           </button>
         )}
         <nav className="flex min-w-0 flex-wrap items-center gap-1 text-sm">
-          {trail.map((node, i) => (
+          {(showRoot ? trail : trail.slice(1)).map((node, i) => (
             <span key={node.id} className="flex items-center gap-1">
               {i > 0 && <span className="text-faint">/</span>}
               <button
                 onClick={() => setFocusId(node.id)}
                 className={`rounded px-1.5 py-0.5 transition hover:bg-surface2 ${
-                  i === trail.length - 1 ? "font-medium text-fg" : "text-muted"
+                  node.id === focus?.id ? "font-medium text-fg" : "text-muted"
                 }`}
               >
                 {node.label}
@@ -175,24 +164,26 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
           />
         ) : (
           <>
-            {/* The bubble you are inside, held at the centre. */}
-            <div
-              className="bubble absolute flex items-center justify-center rounded-full text-center"
-              style={{
-                left: box.w / 2 - cR,
-                top: box.h / 2 - cR,
-                width: cR * 2,
-                height: cR * 2,
-                ...bubbleStyle(focus.hue, true),
-              }}
-            >
-              <Label
-                node={focus}
-                radius={cR}
-                birthDate={birthDate}
-                hasNote={!!notes[bubbleNoteKey(treeId, focus.id)]}
-              />
-            </div>
+            {/* The planet you are inside, held at the centre. */}
+            {!atHiddenRoot && (
+              <div
+                className="bubble absolute flex items-center justify-center rounded-full text-center"
+                style={{
+                  left: box.w / 2 - cR,
+                  top: box.h / 2 - cR,
+                  width: cR * 2,
+                  height: cR * 2,
+                  ...planetStyle(focus.hue, cR, focus.id, true),
+                }}
+              >
+                <Label
+                  node={focus}
+                  radius={cR}
+                  birthDate={birthDate}
+                  hasNote={!!notes[bubbleNoteKey(treeId, focus.id)]}
+                />
+              </div>
+            )}
 
             {items.map((id, i) => {
               const spot = ring[i];
@@ -217,8 +208,8 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                       className="flex h-full w-full items-center justify-center rounded-full"
                       style={
                         node
-                          ? bubbleStyle(node.hue)
-                          : { border: "2px dashed rgba(255,255,255,0.35)" }
+                          ? planetStyle(node.hue, spot.r, node.id)
+                          : { border: "2px dashed var(--edge-2)" }
                       }
                     >
                       <InlineInput
@@ -234,7 +225,7 @@ export function BubbleBoard({ treeId, hint }: { treeId: TreeId; hint: string }) 
                     <button
                       onClick={() => open(node.id)}
                       className="flex h-full w-full items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-2 focus:outline-accent"
-                      style={bubbleStyle(node.hue)}
+                      style={planetStyle(node.hue, spot.r, node.id)}
                     >
                       <Label
                         node={node}
@@ -335,7 +326,7 @@ function HeroBubble({
       <button
         onClick={onOpen}
         className="bubble flex items-center justify-center rounded-full text-center transition hover:brightness-115 focus:outline-2 focus:outline-offset-4 focus:outline-accent"
-        style={{ width: radius * 2, height: radius * 2, ...bubbleStyle(node.hue) }}
+        style={{ width: radius * 2, height: radius * 2, ...planetStyle(node.hue, radius, node.id) }}
       >
         <span
           className="bubble-label px-6 font-semibold tracking-tight text-white"

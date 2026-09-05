@@ -100,7 +100,13 @@ function ellipsePoints(
  * adding a bubble, deleting one or resizing the window re-solves the whole
  * arrangement rather than letting anything overlap or spill.
  */
-export function ringLayout(count: number, width: number, height: number): Placed[] {
+export function ringLayout(
+  count: number,
+  width: number,
+  height: number,
+  /** False when nothing sits in the middle, so the ring can use it. */
+  reserveCentre = true,
+): Placed[] {
   if (count <= 0 || width <= 0 || height <= 0) return [];
 
   const cx = width / 2;
@@ -116,7 +122,7 @@ export function ringLayout(count: number, width: number, height: number): Placed
     return ellipsePoints(n, cx, cy, half.x * f, half.y * f, j % 2 ? 0.5 : 0);
   });
 
-  const cR = short * CENTRE;
+  const cR = reserveCentre ? short * CENTRE : 0;
   let r = short * MAX_BUBBLE;
   for (let i = 0; i < points.length; i++) {
     const p = points[i];

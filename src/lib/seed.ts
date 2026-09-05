@@ -41,11 +41,11 @@ export function childHue(parentHue: number, index: number, count: number): numbe
   return Math.round((parentHue + 30 + spread) % 360);
 }
 
-/** Tab 1: a single "My Life" bubble; decades, years and months grow from it. */
+/** Tab 1: a single "Life Plan" planet; decades, years and months grow from it. */
 export function seedLifeTree(): Tree {
   const root = makeBubble({
     id: "life_root",
-    label: "My Life",
+    label: "Life Plan",
     hue: 205,
     generate: "decades",
     ageFrom: 0,
@@ -53,7 +53,7 @@ export function seedLifeTree(): Tree {
   return { rootId: root.id, nodes: { [root.id]: root } };
 }
 
-/** Tab 3: the areas the plan is built around, spelled out up front. */
+/** Tab 3: the categories the plan is built around, spelled out up front. */
 const MAP: [string, string[]][] = [
   ["Personal Health", ["Mental Health", "Physical Health", "Sexual Health"]],
   ["Outdoors", ["Camping and Hiking", "Biking", "Eco Footprint"]],
@@ -63,7 +63,7 @@ const MAP: [string, string[]][] = [
 ];
 
 export function seedMapTree(): Tree {
-  const root = makeBubble({ id: "map_root", label: "Life Map", hue: 275, seeded: true });
+  const root = makeBubble({ id: "map_root", label: "Life Categories", hue: 275, seeded: true });
   const nodes: Record<string, Bubble> = { [root.id]: root };
 
   MAP.forEach(([area, subs], i) => {
