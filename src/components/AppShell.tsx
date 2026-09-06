@@ -8,6 +8,7 @@ import {
   CalendarRange,
   Compass,
   LayoutGrid,
+  BellRing,
   NotebookPen,
   Settings,
   Sparkles,
@@ -25,6 +26,7 @@ const nav = [
   { href: "/map", label: "Life Categories", icon: Compass },
   { href: "/year", label: "Yearly Goals", icon: Target },
   { href: "/month", label: "Monthly Goals", icon: CalendarDays },
+  { href: "/reminders", label: "Reminders", icon: BellRing },
   { href: "/notes", label: "Notes", icon: NotebookPen },
 ];
 

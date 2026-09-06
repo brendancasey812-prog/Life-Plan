@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
+  BellRing,
   CalendarDays,
   CalendarRange,
   Cake,
@@ -13,6 +15,7 @@ import {
   Target,
 } from "lucide-react";
 import { planetStyle } from "@/lib/planet";
+import { byDue, daysUntil, dueLabel, reminderTitle, type DueTone } from "@/lib/reminders";
 import { MONTHS } from "@/lib/seed";
 import { usePlan } from "@/lib/store";
 import type { NoteMeta, WidgetKind } from "@/lib/types";
@@ -28,6 +31,7 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
   bubbles: { label: "Life Plan", hint: "Into the decades", icon: Sparkles },
   lifeMap: { label: "Life Categories", hint: "What you build your life around", icon: Compass },
   recentNotes: { label: "Recent pages", hint: "What you wrote last", icon: NotebookPen },
+  reminders: { label: "Reminders", hint: "What is due, soonest first", icon: BellRing },
 };
 
 export function WidgetBody({ kind }: { kind: WidgetKind }) {
@@ -48,6 +52,8 @@ export function WidgetBody({ kind }: { kind: WidgetKind }) {
       return <LifeMapWidget />;
     case "recentNotes":
       return <RecentNotesWidget />;
+    case "reminders":
+      return <RemindersWidget />;
   }
 }
 
@@ -240,6 +246,57 @@ function RecentNotesWidget() {
     </Link>
   );
 }
+
+/** What is due, soonest first, with anything overdue called out. */
+function RemindersWidget() {
+  const reminders = usePlan((s) => s.reminders);
+  const due = useMemo(
+    () =>
+      [...reminders]
+        .filter((r) => !r.done)
+        .sort(byDue)
+        .slice(0, 4),
+    [reminders],
+  );
+  const overdue = reminders.filter((r) => !r.done && (daysUntil(r.due) ?? 1) < 0).length;
+
+  return (
+    <Link href="/reminders" className="flex h-full flex-col">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-base font-medium">Reminders</h3>
+        <ArrowUpRight size={17} className="shrink-0 text-faint" />
+      </div>
+
+      {due.length === 0 ? (
+        <p className="mt-3 text-base text-faint">Nothing outstanding.</p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {due.map((r) => {
+            const label = dueLabel(r.due);
+            return (
+              <li key={r.id} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 flex-1 truncate text-base text-muted">
+                  {reminderTitle(r.title)}
+                </span>
+                <span className={`shrink-0 text-sm ${TONE[label.tone]}`}>{label.text}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {overdue > 0 && <p className="mt-auto pt-3 text-sm text-dangerink">{overdue} overdue</p>}
+    </Link>
+  );
+}
+
+const TONE: Record<DueTone, string> = {
+  overdue: "text-dangerink font-medium",
+  today: "text-accentink font-medium",
+  soon: "text-muted",
+  later: "text-faint",
+  none: "text-faint",
+};
 
 function Meter({ value }: { value: number }) {
   return (

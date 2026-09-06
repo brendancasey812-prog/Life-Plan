@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { findTimeline } from "./goals";
+import { byDue, reminderNoteKey } from "./reminders";
 import { bubbleNoteKey, excerptOf, weekNoteKey, writeNote } from "./notes";
 import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
 import type {
@@ -13,6 +14,7 @@ import type {
   Settings,
   Tree,
   TreeId,
+  Reminder,
   WeekEntry,
   Widget,
   WidgetKind,
@@ -35,6 +37,7 @@ export function defaultWidgets(): Widget[] {
     ["weeks", 1],
     ["bubbles", 1],
     ["lifeMap", 1],
+    ["reminders", 2],
     ["recentNotes", 1],
   ];
   return kinds.map(([kind, span]) => ({ id: newId("w"), kind, span }));
@@ -54,6 +57,9 @@ interface Actions {
    */
   resolveTimeline: (age: number, month?: number) => void;
   addPage: (title: string) => string;
+  addReminder: (title: string) => string;
+  updateReminder: (id: string, patch: Partial<Omit<Reminder, "id" | "createdAt">>) => void;
+  deleteReminder: (id: string) => void;
   renamePage: (id: string, title: string) => void;
   deletePage: (id: string) => void;
   addWidget: (kind: WidgetKind) => void;
@@ -77,6 +83,7 @@ function emptyState(): PlanState {
     trees: seedTrees(),
     weeks: {},
     pages: [],
+    reminders: [],
     notes: {},
     widgets: defaultWidgets(),
   };
@@ -285,6 +292,29 @@ export const usePlan = create<PlanStore>()(
 
       // Kept exactly as typed, empty included, so backspacing a title works;
       // `pageTitle` supplies the fallback wherever one is shown.
+      addReminder: (title) => {
+        const reminder: Reminder = {
+          id: newId("r"),
+          title,
+          due: "",
+          done: false,
+          createdAt: Date.now(),
+        };
+        set((s) => ({ reminders: [reminder, ...s.reminders].sort(byDue) }));
+        return reminder.id;
+      },
+
+      updateReminder: (id, patch) =>
+        set((s) => ({
+          reminders: s.reminders.map((r) => (r.id === id ? { ...r, ...patch } : r)).sort(byDue),
+        })),
+
+      deleteReminder: (id) =>
+        set((s) => ({
+          reminders: s.reminders.filter((r) => r.id !== id),
+          notes: withoutKeys(s.notes, [reminderNoteKey(id)]),
+        })),
+
       renamePage: (id, title) =>
         set((s) => ({ pages: s.pages.map((p) => (p.id === id ? { ...p, title } : p)) })),
 
@@ -328,12 +358,13 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 4,
+      version: 5,
       partialize: (s): PlanState => ({
         settings: s.settings,
         trees: s.trees,
         weeks: s.weeks,
         pages: s.pages,
+        reminders: s.reminders,
         notes: s.notes,
         widgets: s.widgets,
       }),
@@ -342,6 +373,18 @@ export const usePlan = create<PlanStore>()(
         // The entry tab became a widget board; a plan from before it gets the
         // default layout.
         if (!state.widgets?.length) state.widgets = defaultWidgets();
+        state.reminders ??= [];
+
+        // A board arranged before reminders existed would never show them, so
+        // put one in beside the goals rather than leaving it to be found.
+        if (!state.widgets.some((w) => w.kind === "reminders")) {
+          const card: Widget = { id: newId("w"), kind: "reminders", span: 2 };
+          const afterGoals = state.widgets.findLastIndex(
+            (w) => w.kind === "yearGoals" || w.kind === "monthGoals",
+          );
+          state.widgets = [...state.widgets];
+          state.widgets.splice(afterGoals < 0 ? state.widgets.length : afterGoals + 1, 0, card);
+        }
 
         // The two roots were renamed. Only rename one that still carries its
         // old default — anything the user chose themselves is theirs.
@@ -407,6 +450,7 @@ export function parsePlan(text: string): (PlanState & { noteBodies?: unknown }) 
       trees: data.trees,
       weeks: data.weeks ?? {},
       pages: data.pages ?? [],
+      reminders: data.reminders ?? [],
       notes: data.notes ?? {},
       widgets: data.widgets?.length ? data.widgets : defaultWidgets(),
       noteBodies: data.noteBodies,

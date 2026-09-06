@@ -17,6 +17,7 @@ network call; export a JSON copy from **Settings** to move it.
 | **Life Categories** | Opens straight onto the categories the plan is built around — Personal Health (mental, physical, sexual), Outdoors (camping and hiking, biking, eco footprint), Music, Finance and Craftmanship — with no parent planet above them. |
 | **Yearly Goals — 2026** | A notepad for this year, with picture boxes beside it. |
 | **Monthly Goals — September 2026** | The same, for this month. |
+| **Reminders** | What is still to do, soonest first — overdue called out, done sinking to the bottom. |
 | **Notes** | Every page in one place — the ones hanging off bubbles and weeks, plus any you start on their own — searchable across their whole text. |
 
 The wordmark goes to the Overview from anywhere, and clicking the tab you are
@@ -79,6 +80,7 @@ the default back. The same widget can appear more than once.
 | **Weeks lived** | How much of the 100-year grid is behind you. |
 | **Life Plan** | Into the decades. |
 | **Life Categories** | What you build your life around. |
+| **Reminders** | The next four due, and how many are overdue. |
 | **Recent pages** | What you wrote last. |
 
 The two goal widgets are not summaries of anything — they read the very page
@@ -146,6 +148,15 @@ Both dates come from the clock in your browser, not from the build, so the tabs
 follow the calendar rather than going stale. My Life's timeline is generated as
 it is opened, so a tab builds whatever part of it the period needs on first
 visit.
+
+## Reminders
+
+Built like the Notes tab — search, an add button, a grid — and every reminder
+has the same rich page behind it, so a screenshot or a checklist can sit with
+it. Each one carries a due date and a done box; the list orders itself by what
+is due soonest, sends anything finished to the bottom, and puts overdue items
+in the danger colour. They show on the Notes tab too, since that lists every
+page there is.
 
 ## Notes
 

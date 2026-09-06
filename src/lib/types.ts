@@ -66,13 +66,24 @@ export type WidgetKind =
   | "bubbles"
   | "weeks"
   | "lifeMap"
-  | "recentNotes";
+  | "recentNotes"
+  | "reminders";
 
 export interface Widget {
   id: string;
   kind: WidgetKind;
   /** Columns it takes on a wide screen, out of three. */
   span: 1 | 2 | 3;
+}
+
+/** Something to do, with a page of its own behind it. */
+export interface Reminder {
+  id: string;
+  title: string;
+  /** ISO `YYYY-MM-DD`, or "" when it is not tied to a day. */
+  due: string;
+  done: boolean;
+  createdAt: number;
 }
 
 /** A note page that stands on its own, rather than hanging off a bubble. */
@@ -95,6 +106,7 @@ export interface PlanState {
   trees: Record<TreeId, Tree>;
   weeks: Record<string, WeekEntry>;
   pages: Page[];
+  reminders: Reminder[];
   /** Note key -> what is in that page. Bodies live in IndexedDB. */
   notes: Record<string, NoteMeta>;
   /** The entry tab's layout, in the order the cards appear. */

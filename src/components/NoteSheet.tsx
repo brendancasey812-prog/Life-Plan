@@ -14,6 +14,7 @@ export function NoteSheet({
   title,
   subtitle,
   placeholder = "Write, paste a screenshot, drop in a picture…",
+  extra,
   onRename,
   onDelete,
   onClose,
@@ -23,6 +24,8 @@ export function NoteSheet({
   subtitle?: string;
   placeholder?: string;
   /** Given for pages whose title is the user's to change. */
+  /** Controls that belong with the title, such as a reminder's due date. */
+  extra?: React.ReactNode;
   onRename?: (title: string) => void;
   onDelete?: () => void;
   onClose: () => void;
@@ -54,6 +57,7 @@ export function NoteSheet({
               <h2 className="truncate text-lg font-semibold tracking-tight">{title}</h2>
             )}
             {subtitle && <p className="truncate text-xs text-faint">{subtitle}</p>}
+            {extra}
           </div>
 
           {onDelete && (

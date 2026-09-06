@@ -2,15 +2,16 @@
 
 import { useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { CalendarRange, FileText, ImageIcon, Plus, Search, Sparkles } from "lucide-react";
+import { BellRing, CalendarRange, FileText, ImageIcon, Plus, Search, Sparkles } from "lucide-react";
 import { useGoHome } from "@/lib/goHome";
 import { deleteNotes, pageNoteKey } from "@/lib/notes";
+import { dueLabel, reminderNoteKey, reminderTitle } from "@/lib/reminders";
 import { pageTitle, usePlan } from "@/lib/store";
 import type { NoteMeta, TreeId } from "@/lib/types";
 import { formatRange } from "@/lib/weeks";
 import { NoteSheet } from "./NoteSheet";
 
-type Kind = "page" | "bubble" | "week";
+type Kind = "page" | "bubble" | "week" | "reminder";
 
 interface Entry {
   key: string;
@@ -26,10 +27,12 @@ const ICON: Record<Kind, typeof FileText> = {
   page: FileText,
   bubble: Sparkles,
   week: CalendarRange,
+  reminder: BellRing,
 };
 
 export function Notebook() {
   const pages = usePlan((s) => s.pages);
+  const reminders = usePlan((s) => s.reminders);
   const notes = usePlan((s) => s.notes);
   const trees = usePlan((s) => s.trees);
   const birthDate = usePlan((s) => s.settings.birthDate);
@@ -75,6 +78,16 @@ export function Notebook() {
           context: trail.join("  /  ") || "Bubble",
           meta,
         });
+      } else if (key.startsWith("reminder:")) {
+        const reminder = reminders.find((r) => reminderNoteKey(r.id) === key);
+        if (!reminder) continue; // The reminder is gone; its page goes with it.
+        out.push({
+          key,
+          kind: "reminder",
+          title: reminderTitle(reminder.title),
+          context: reminder.done ? "Reminder · done" : `Reminder · ${dueLabel(reminder.due).text}`,
+          meta,
+        });
       } else if (key.startsWith("week:")) {
         const [, age, week] = key.split(":").map(Number);
         out.push({
@@ -88,7 +101,7 @@ export function Notebook() {
     }
 
     return out.sort((a, b) => (b.meta?.updatedAt ?? 0) - (a.meta?.updatedAt ?? 0));
-  }, [pages, notes, trees, birthDate]);
+  }, [pages, reminders, notes, trees, birthDate]);
 
   const q = query.trim().toLowerCase();
   const shown = q
