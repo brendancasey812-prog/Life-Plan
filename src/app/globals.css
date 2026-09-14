@@ -58,16 +58,17 @@
   --b-on-s: calc(34% + var(--dk) * 6%);
   --b-on-s2: calc(30% + var(--dk) * 4%);
   --b-on-l1: calc(52% + var(--dk) * 6%);
-  --b-on-l2: calc(36% - var(--dk) * 4%);
+  --b-on-l2: calc(45% - var(--dk) * 2%);
   --b-on-a: calc(1 - var(--dk) * 0.1);
   --b-dim-s: 22%;
   --b-dim-s2: 18%;
   --b-dim-l1: calc(50% - var(--dk) * 6%);
-  --b-dim-l2: calc(36% - var(--dk) * 12%);
+  --b-dim-l2: calc(44% - var(--dk) * 10%);
   --b-dim-a: calc(1 - var(--dk) * 0.14);
-  --b-ring-l: calc(42% + var(--dk) * 26%);
-  --b-ring-a: calc(0.26 - var(--dk) * 0.04);
-  --b-shadow-a: calc(0.28 + var(--dk) * 0.34);
+  /* The border does the work the shading used to; how light it is comes from
+     each bubble's own fill, in `planetStyle`. */
+  --b-ring-a: calc(0.7 + var(--dk) * 0.05);
+  --b-shadow-a: calc(0.12 + var(--dk) * 0.16);
 
   --page-bg:
     radial-gradient(
@@ -188,9 +189,10 @@ textarea {
   }
 }
 
-/* White on a bubble, whatever hue it landed on. */
+/* White on a bubble, whatever hue it landed on. Lighter than it was, now
+   that the bubbles themselves carry less shadow. */
 .bubble-label {
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.38);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
 }
 
 /* ── Note pages ─────────────────────────────────────────────────────────────

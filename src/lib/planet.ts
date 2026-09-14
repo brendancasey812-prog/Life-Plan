@@ -11,20 +11,17 @@ export function hueDrop(hue: number): number {
   return +(warm * 16).toFixed(1);
 }
 
-/** Where the light falls, the same for every planet, as one sun would. */
-const LIGHT_X = 30;
-const LIGHT_Y = 24;
-
 /**
- * A lit sphere: a diffuse highlight where the light falls, a terminator
- * curving away into a dark limb, atmosphere catching the light on the near
- * edge, and a cast shadow so it sits above the page rather than on it. No
- * surface markings — the colour carries it.
+ * A flat, clearly outlined disc rather than a modelled sphere. The heavy
+ * version — strong terminator, dark limb, inset shading either side, a big
+ * cast shadow — made a ring of a dozen of them tiring to look at, so this
+ * keeps only a soft sheen for a little life and spends the contrast on the
+ * edge instead.
  *
  * Hue, saturation and lightness all come from the palette variables, so the
  * colour scheme is untouched and both themes are handled where they always
- * were. `radius` is needed because the shading is drawn with shadows, whose
- * sizes are in pixels and so have to scale with the planet.
+ * were. `radius` is needed because the border and the lift are drawn in
+ * pixels and so have to scale with the bubble.
  */
 export function planetStyle(hue: number, radius: number, dim = false): CSSProperties {
   const v = dim ? "dim" : "on";
@@ -33,22 +30,22 @@ export function planetStyle(hue: number, radius: number, dim = false): CSSProper
   const l = (n: 1 | 2, extra = 0) => `calc(var(--b-${v}-l${n}) - ${(d + extra).toFixed(1)}%)`;
   const a = `var(--b-${v}-a)`;
   const r = Math.max(12, radius);
+  // Inset, so the border never widens the bubble's footprint and the layout
+  // solver's spacing still holds.
+  const border = Math.max(1.5, r * 0.04).toFixed(1);
+  // Measured against this bubble's own fill rather than a fixed lightness, so
+  // a dark bubble gets as much edge as a pale one: darker in light, lighter in
+  // dark, by the same amount either way.
+  const edge = `calc(${l(2)} - 17% + var(--dk) * 40%)`;
 
   return {
     background: [
-      `radial-gradient(circle at ${LIGHT_X}% ${LIGHT_Y}%, rgb(255 255 255 / 0.24), rgb(255 255 255 / 0.11) 13%, rgb(255 255 255 / 0.03) 32%, rgb(255 255 255 / 0) 54%)`,
-      `radial-gradient(circle at ${LIGHT_X + 6}% ${LIGHT_Y + 5}%, rgb(0 0 0 / 0) 30%, rgb(0 0 0 / 0.2) 62%, rgb(0 0 0 / 0.46) 86%, rgb(0 0 0 / 0.6) 100%)`,
-      `radial-gradient(circle at ${LIGHT_X + 4}% ${LIGHT_Y + 2}%, hsl(${hue} var(--b-${v}-s) ${l(1, -6)} / ${a}), hsl(${hue} var(--b-${v}-s) ${l(1)} / ${a}) 26%, hsl(${hue} var(--b-${v}-s2) ${l(2)} / ${a}) 72%, hsl(${hue} var(--b-${v}-s2) ${l(2, 12)} / ${a}) 100%)`,
+      `radial-gradient(circle at 34% 26%, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0) 60%)`,
+      `linear-gradient(155deg, hsl(${hue} var(--b-${v}-s) ${l(1)} / ${a}), hsl(${hue} var(--b-${v}-s2) ${l(2)} / ${a}))`,
     ].join(", "),
     boxShadow: [
-      // A hairline so the planet has an edge against the page.
-      `0 0 0 1px hsl(${hue} 40% var(--b-ring-l) / var(--b-ring-a))`,
-      // Atmosphere catching the light on the near limb.
-      `inset ${(r * 0.09).toFixed(1)}px ${(r * 0.11).toFixed(1)}px ${(r * 0.24).toFixed(1)}px ${(-r * 0.13).toFixed(1)}px rgb(255 255 255 / 0.3)`,
-      // The far limb falling into shadow.
-      `inset ${(-r * 0.13).toFixed(1)}px ${(-r * 0.17).toFixed(1)}px ${(r * 0.34).toFixed(1)}px ${(-r * 0.15).toFixed(1)}px rgb(0 0 0 / 0.5)`,
-      // Cast shadow, so it sits above the page rather than on it.
-      `0 ${(r * 0.2).toFixed(1)}px ${(r * 0.44).toFixed(1)}px ${(-r * 0.22).toFixed(1)}px rgb(0 0 0 / var(--b-shadow-a))`,
+      `inset 0 0 0 ${border}px hsl(${hue} 42% ${edge} / var(--b-ring-a))`,
+      `0 ${(r * 0.05).toFixed(1)}px ${(r * 0.13).toFixed(1)}px ${(-r * 0.09).toFixed(1)}px rgb(0 0 0 / var(--b-shadow-a))`,
     ].join(", "),
   };
 }

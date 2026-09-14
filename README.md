@@ -87,19 +87,21 @@ The two goal widgets are not summaries of anything — they read the very page
 the goal tabs and the bubbles open, so a line written on any of the three
 shows up on the other two, and the widget names the bubble it came from.
 
-## Planets
+## The bubbles
 
-Every bubble is drawn as a lit sphere by
-[`src/lib/planet.ts`](src/lib/planet.ts): a diffuse highlight where the light
-falls, a terminator curving away into a dark limb, atmosphere catching the
-light on the near edge, and a cast shadow so it sits above the page rather
-than on it. Because that shading is drawn with shadows, whose sizes are in
-pixels, it is scaled to each planet's radius.
+Every bubble is drawn by [`src/lib/planet.ts`](src/lib/planet.ts) as a flat
+disc with a clearly drawn edge: a gentle two-stop fill, a soft sheen top-left,
+and a border whose lightness is measured against that bubble's own fill —
+darker than it in light, lighter in dark, by the same amount either way — so a
+deep green reads as crisply as a pale orchid. The border is inset, so it never
+widens the footprint the layout solver spaced the bubbles on, and both it and
+the slight lift scale with the radius.
 
-There are no surface markings — the colour carries it — and every planet is
-lit from the same direction, as one sun would. The colour is untouched: hue,
-saturation and lightness still come from the palette variables, so both themes
-are handled where they always were.
+An earlier version modelled them as lit spheres, with a terminator falling into
+a dark limb and shading inset on both sides. A ring of a dozen of those was
+tiring to look at, so the contrast moved to the edge instead. The colour is
+untouched either way: hue, saturation and lightness all still come from the
+palette variables.
 
 ## Bubbles
 
