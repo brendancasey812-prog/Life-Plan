@@ -31,13 +31,13 @@ const DEFAULT_SETTINGS: Settings = {
 export function defaultWidgets(): Widget[] {
   const kinds: [WidgetKind, 1 | 2 | 3][] = [
     ["age", 3],
+    ["yearGoals", 3],
+    ["monthGoals", 3],
+    ["reminders", 2],
     ["date", 1],
-    ["yearGoals", 2],
-    ["monthGoals", 2],
     ["weeks", 1],
     ["bubbles", 1],
     ["lifeMap", 1],
-    ["reminders", 2],
     ["recentNotes", 1],
   ];
   return kinds.map(([kind, span]) => ({ id: newId("w"), kind, span }));
@@ -358,7 +358,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 5,
+      version: 6,
       partialize: (s): PlanState => ({
         settings: s.settings,
         trees: s.trees,
@@ -384,6 +384,19 @@ export const usePlan = create<PlanStore>()(
           );
           state.widgets = [...state.widgets];
           state.widgets.splice(afterGoals < 0 ? state.widgets.length : afterGoals + 1, 0, card);
+        }
+
+        // The goal cards used to land side by side, offset across the rows.
+        // Put them full width and one after the other.
+        const yearAt = state.widgets.findIndex((w) => w.kind === "yearGoals");
+        const monthAt = state.widgets.findIndex((w) => w.kind === "monthGoals");
+        if (yearAt >= 0 && monthAt >= 0) {
+          const widgets = state.widgets.map((w) =>
+            w.kind === "yearGoals" || w.kind === "monthGoals" ? { ...w, span: 3 as const } : w,
+          );
+          const [month] = widgets.splice(monthAt, 1);
+          widgets.splice(widgets.findIndex((w) => w.kind === "yearGoals") + 1, 0, month);
+          state.widgets = widgets;
         }
 
         // The two roots were renamed. Only rename one that still carries its
@@ -438,6 +451,19 @@ export const usePlan = create<PlanStore>()(
 
 export function pageTitle(title: string): string {
   return title.trim() || "Untitled page";
+}
+
+/** Everything an export carries. Anything missing here is silently lost. */
+export function exportable(s: PlanState): PlanState {
+  return {
+    settings: s.settings,
+    trees: s.trees,
+    weeks: s.weeks,
+    pages: s.pages,
+    reminders: s.reminders,
+    notes: s.notes,
+    widgets: s.widgets,
+  };
 }
 
 /** Parses an exported plan, returning null rather than throwing on junk. */

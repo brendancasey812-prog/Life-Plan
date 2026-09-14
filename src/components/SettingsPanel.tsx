@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Download, Monitor, Moon, RotateCcw, Sun, Upload, X } from "lucide-react";
 import { allNotes, clearAllNotes, restoreNotes } from "@/lib/notes";
-import { parsePlan, usePlan } from "@/lib/store";
+import { exportable, parsePlan, usePlan } from "@/lib/store";
 import { setTheme, useTheme, type Theme } from "@/lib/theme";
 import type { NoteBody } from "@/lib/types";
 
@@ -22,9 +22,8 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   async function download() {
     setBusy(true);
     try {
-      const { settings, trees, weeks, pages, notes } = usePlan.getState();
       const noteBodies = await allNotes().catch(() => ({}));
-      const json = JSON.stringify({ settings, trees, weeks, pages, notes, noteBodies }, null, 2);
+      const json = JSON.stringify({ ...exportable(usePlan.getState()), noteBodies }, null, 2);
       const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
       const a = document.createElement("a");
       a.href = url;

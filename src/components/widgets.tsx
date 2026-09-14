@@ -128,7 +128,7 @@ function GoalWidget({ scope }: { scope: Scope }) {
         <ArrowUpRight size={17} className="mt-1.5 shrink-0 text-faint" />
       </div>
       <p className="truncate text-sm text-faint">{trail.join("  ›  ") || "Life Plan"}</p>
-      <p className="mt-3 line-clamp-5 flex-1 text-base text-muted">
+      <p className="mt-3 line-clamp-5 max-w-[70ch] flex-1 text-base text-muted">
         {meta?.excerpt || (meta?.images ? "" : "Nothing written yet — open it to start.")}
       </p>
       {!!meta?.images && (
