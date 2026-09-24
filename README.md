@@ -75,13 +75,17 @@ the default back. The same widget can appear more than once.
 | --- | --- |
 | **Age** | How old you are, how far through this year of your life, and how long until the next birthday. |
 | **Month & year** | Today's date, and which week of your year it falls in. |
-| **Yearly goals** | This year's page. |
-| **Monthly goals** | This month's page. |
+| **Yearly goals** | This year's page, a goal to a line. |
+| **Monthly goals** | This month's page, the same. |
 | **Weeks lived** | How much of the 100-year grid is behind you. |
 | **Life Plan** | Into the decades. |
 | **Life Categories** | What you build your life around. |
 | **Reminders** | The next four due, and how many are overdue. |
 | **Recent pages** | What you wrote last. |
+
+Each goal gets a line of its own on the goal cards. The index keeps a page's
+first lines — one per paragraph, bullet or checklist item — rather than only
+the flattened excerpt, which ran them together as prose.
 
 The two goal widgets are not summaries of anything — they read the very page
 the goal tabs and the bubbles open, so a line written on any of the three

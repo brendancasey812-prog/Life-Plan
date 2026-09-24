@@ -128,9 +128,7 @@ function GoalWidget({ scope }: { scope: Scope }) {
         <ArrowUpRight size={17} className="mt-1.5 shrink-0 text-faint" />
       </div>
       <p className="truncate text-sm text-faint">{trail.join("  ›  ") || "Life Plan"}</p>
-      <p className="mt-3 line-clamp-5 max-w-[70ch] flex-1 text-base text-muted">
-        {meta?.excerpt || (meta?.images ? "" : "Nothing written yet — open it to start.")}
-      </p>
+      <GoalLines meta={meta} />
       {!!meta?.images && (
         <span className="mt-2.5 flex items-center gap-1.5 text-sm text-faint">
           <ImageIcon size={13} /> {meta.images} picture{meta.images === 1 ? "" : "s"}
@@ -244,6 +242,45 @@ function RecentNotesWidget() {
         </ul>
       )}
     </Link>
+  );
+}
+
+/** How many goals a card lists before it says how many are left. */
+const SHOWN = 5;
+
+/**
+ * Every goal on a line of its own, stacked down the card. The page's excerpt
+ * flattens its newlines into one run of prose, which ran the goals together
+ * across the card; `meta.lines` keeps them apart.
+ */
+function GoalLines({ meta }: { meta?: NoteMeta }) {
+  const lines = meta?.lines?.length
+    ? meta.lines
+    : // A page indexed before lines were kept still has its excerpt.
+      meta?.excerpt
+      ? [meta.excerpt]
+      : [];
+
+  if (lines.length === 0) {
+    return (
+      <p className="mt-3 flex-1 text-base text-muted">
+        {meta?.images ? "" : "Nothing written yet — open it to start."}
+      </p>
+    );
+  }
+
+  return (
+    <ul className="mt-3 flex-1 space-y-1.5">
+      {lines.slice(0, SHOWN).map((line, i) => (
+        <li key={i} className="flex gap-2.5 text-base text-muted">
+          <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
+          <span className="min-w-0 flex-1 truncate">{line}</span>
+        </li>
+      ))}
+      {lines.length > SHOWN && (
+        <li className="pl-5 text-sm text-faint">+{lines.length - SHOWN} more</li>
+      )}
+    </ul>
   );
 }
 

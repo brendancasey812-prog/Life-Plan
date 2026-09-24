@@ -53,6 +53,12 @@ export interface NoteBody {
 
 export interface NoteMeta {
   excerpt: string;
+  /**
+   * The page's first few lines, one entry per paragraph, list item or
+   * checklist item — so a widget can stack them instead of running them
+   * together the way `excerpt` does.
+   */
+  lines?: string[];
   images: number;
   updatedAt: number;
 }

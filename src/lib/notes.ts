@@ -62,11 +62,35 @@ export function pictureCount(body: NoteBody): number {
   return body.images + (body.gallery?.length ?? 0);
 }
 
+/** How many lines of a page the index keeps, and how long each may be. */
+const MAX_LINES = 8;
+const MAX_LINE = 120;
+
+/**
+ * The page split into its lines. The editor separates blocks with newlines,
+ * so a paragraph, a bullet and a checklist item each come back on their own —
+ * which is what lets a widget give every goal a line of its own.
+ */
+export function linesOf(text: string): string[] {
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, MAX_LINES)
+    .map((line) => (line.length > MAX_LINE ? `${line.slice(0, MAX_LINE - 1)}…` : line));
+}
+
 /** What the main store keeps about a page — null once nothing is left on it. */
 export function metaOf(body: NoteBody): NoteMeta | null {
   const pictures = pictureCount(body);
-  if (!body.text.trim() && pictures === 0) return null;
-  return { excerpt: excerptOf(body.text), images: pictures, updatedAt: body.updatedAt };
+  const text = body.text ?? "";
+  if (!text.trim() && pictures === 0) return null;
+  return {
+    excerpt: excerptOf(text),
+    lines: linesOf(text),
+    images: pictures,
+    updatedAt: body.updatedAt,
+  };
 }
 
 export function excerptOf(text: string, max = 160): string {

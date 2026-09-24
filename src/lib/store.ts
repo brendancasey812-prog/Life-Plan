@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { findTimeline } from "./goals";
 import { byDue, reminderNoteKey } from "./reminders";
-import { bubbleNoteKey, excerptOf, weekNoteKey, writeNote } from "./notes";
+import { allNotes, bubbleNoteKey, excerptOf, metaOf, weekNoteKey, writeNote } from "./notes";
 import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
 import type {
   Bubble,
@@ -358,7 +358,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 6,
+      version: 7,
       partialize: (s): PlanState => ({
         settings: s.settings,
         trees: s.trees,
@@ -397,6 +397,24 @@ export const usePlan = create<PlanStore>()(
           const [month] = widgets.splice(monthAt, 1);
           widgets.splice(widgets.findIndex((w) => w.kind === "yearGoals") + 1, 0, month);
           state.widgets = widgets;
+        }
+
+        // The index gained per-line content. Rebuild every meta from its
+        // body so pages written before that show their goals stacked without
+        // having to be reopened and saved.
+        if (version < 7) {
+          try {
+            const bodies = await allNotes();
+            const notes = { ...(state.notes ?? {}) };
+            for (const [key, body] of Object.entries(bodies)) {
+              const meta = metaOf(body);
+              if (meta) notes[key] = meta;
+              else delete notes[key];
+            }
+            state.notes = notes;
+          } catch {
+            // No IndexedDB to read; the metas fill in as pages are saved.
+          }
         }
 
         // The two roots were renamed. Only rename one that still carries its
