@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
   BellRing,
+  Check,
   CalendarDays,
   CalendarRange,
   Cake,
@@ -14,6 +15,8 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
+import { metaOf, readNote, updateNote } from "@/lib/notes";
+import { toggleOutlineItem, type OutlineItem } from "@/lib/outline";
 import { planetStyle } from "@/lib/planet";
 import { byDue, daysUntil, dueLabel, reminderTitle, type DueTone } from "@/lib/reminders";
 import { MONTHS } from "@/lib/seed";
@@ -112,29 +115,118 @@ function DateWidget() {
 
 /** The same page the goal tab and the bubble open — not a copy of it. */
 function GoalWidget({ scope }: { scope: Scope }) {
-  const { period, meta, trail } = useGoalPage(scope);
+  const { period, noteKey, meta, trail } = useGoalPage(scope);
   const href = scope === "year" ? "/year" : "/month";
   const [eyebrow, heading] = period.title.split(" — ");
 
   return (
-    <Link href={href} className="flex h-full flex-col">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-xs font-medium tracking-[0.14em] text-accentink uppercase">
-            {eyebrow}
-          </p>
-          <h3 className="text-2xl font-semibold tracking-tight">{heading}</h3>
-        </div>
-        <ArrowUpRight size={17} className="mt-1.5 shrink-0 text-faint" />
-      </div>
-      <p className="truncate text-sm text-faint">{trail.join("  ›  ") || "Life Plan"}</p>
-      <GoalLines meta={meta} />
+    <div className="flex h-full flex-col">
+      <Link href={href} className="block">
+        <span className="flex items-start justify-between gap-2">
+          <span className="min-w-0">
+            <span className="block text-xs font-medium tracking-[0.14em] text-accentink uppercase">
+              {eyebrow}
+            </span>
+            <span className="block text-2xl font-semibold tracking-tight">{heading}</span>
+          </span>
+          <ArrowUpRight size={17} className="mt-1.5 shrink-0 text-faint" />
+        </span>
+        <span className="block truncate text-sm text-faint">
+          {trail.join("  ›  ") || "Life Plan"}
+        </span>
+      </Link>
+      <GoalLines meta={meta} noteKey={noteKey} href={href} />
       {!!meta?.images && (
         <span className="mt-2.5 flex items-center gap-1.5 text-sm text-faint">
           <ImageIcon size={13} /> {meta.images} picture{meta.images === 1 ? "" : "s"}
         </span>
       )}
-    </Link>
+    </div>
+  );
+}
+
+/** How many goals a card lists before it says how many are left. */
+const SHOWN = 5;
+
+/**
+ * Every goal on a line of its own. A goal written as a checklist item gets a
+ * real box here, and ticking it writes straight into the page — the same page
+ * the goal tab and the timeline bubble open, so all three agree. A plain
+ * paragraph has no box on the page either, so it keeps a bullet.
+ */
+function GoalLines({
+  meta,
+  noteKey,
+  href,
+}: {
+  meta?: NoteMeta;
+  noteKey: string | null;
+  href: string;
+}) {
+  const setNoteMeta = usePlan((s) => s.setNoteMeta);
+  const [busy, setBusy] = useState<number | null>(null);
+
+  const items: OutlineItem[] = meta?.outline?.length
+    ? meta.outline
+    : // A page indexed before the outline existed still has its excerpt.
+      meta?.excerpt
+      ? [{ text: meta.excerpt }]
+      : [];
+
+  async function toggle(index: number, text: string) {
+    if (!noteKey) return;
+    setBusy(index);
+    try {
+      const body = await readNote(noteKey);
+      const html = body && toggleOutlineItem(body.html, index, text);
+      if (!html) return;
+      setNoteMeta(noteKey, metaOf(await updateNote(noteKey, { html })));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="mt-3 flex-1 text-base text-muted">
+        {meta?.images ? "" : "Nothing written yet — open it to start."}
+      </p>
+    );
+  }
+
+  return (
+    <ul className="mt-3 flex-1 space-y-1.5">
+      {items.slice(0, SHOWN).map((item, i) => (
+        <li key={i} className="flex items-start gap-2.5 text-base">
+          {item.done === undefined ? (
+            <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
+          ) : (
+            <button
+              onClick={() => void toggle(i, item.text)}
+              disabled={busy !== null}
+              aria-pressed={item.done}
+              aria-label={item.done ? `Untick ${item.text}` : `Tick ${item.text}`}
+              className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border transition ${
+                item.done
+                  ? "border-transparent bg-done text-white"
+                  : "border-edge2 text-transparent hover:border-accent"
+              }`}
+            >
+              <Check size={12} />
+            </button>
+          )}
+          <Link
+            href={href}
+            className={`min-w-0 flex-1 truncate ${item.done ? "text-faint line-through" : "text-muted"}`}
+          >
+            {item.text}
+          </Link>
+        </li>
+      ))}
+      {items.length > SHOWN && (
+        <li className="pl-[28px] text-sm text-faint">+{items.length - SHOWN} more</li>
+      )}
+    </ul>
   );
 }
 
@@ -245,48 +337,10 @@ function RecentNotesWidget() {
   );
 }
 
-/** How many goals a card lists before it says how many are left. */
-const SHOWN = 5;
-
-/**
- * Every goal on a line of its own, stacked down the card. The page's excerpt
- * flattens its newlines into one run of prose, which ran the goals together
- * across the card; `meta.lines` keeps them apart.
- */
-function GoalLines({ meta }: { meta?: NoteMeta }) {
-  const lines = meta?.lines?.length
-    ? meta.lines
-    : // A page indexed before lines were kept still has its excerpt.
-      meta?.excerpt
-      ? [meta.excerpt]
-      : [];
-
-  if (lines.length === 0) {
-    return (
-      <p className="mt-3 flex-1 text-base text-muted">
-        {meta?.images ? "" : "Nothing written yet — open it to start."}
-      </p>
-    );
-  }
-
-  return (
-    <ul className="mt-3 flex-1 space-y-1.5">
-      {lines.slice(0, SHOWN).map((line, i) => (
-        <li key={i} className="flex gap-2.5 text-base text-muted">
-          <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
-          <span className="min-w-0 flex-1 truncate">{line}</span>
-        </li>
-      ))}
-      {lines.length > SHOWN && (
-        <li className="pl-5 text-sm text-faint">+{lines.length - SHOWN} more</li>
-      )}
-    </ul>
-  );
-}
-
 /** What is due, soonest first, with anything overdue called out. */
 function RemindersWidget() {
   const reminders = usePlan((s) => s.reminders);
+  const updateReminder = usePlan((s) => s.updateReminder);
   const due = useMemo(
     () =>
       [...reminders]
@@ -298,11 +352,11 @@ function RemindersWidget() {
   const overdue = reminders.filter((r) => !r.done && (daysUntil(r.due) ?? 1) < 0).length;
 
   return (
-    <Link href="/reminders" className="flex h-full flex-col">
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-base font-medium">Reminders</h3>
+    <div className="flex h-full flex-col">
+      <Link href="/reminders" className="flex items-baseline justify-between gap-2">
+        <span className="text-base font-medium">Reminders</span>
         <ArrowUpRight size={17} className="shrink-0 text-faint" />
-      </div>
+      </Link>
 
       {due.length === 0 ? (
         <p className="mt-3 text-base text-faint">Nothing outstanding.</p>
@@ -311,10 +365,18 @@ function RemindersWidget() {
           {due.map((r) => {
             const label = dueLabel(r.due);
             return (
-              <li key={r.id} className="flex items-baseline justify-between gap-3">
-                <span className="min-w-0 flex-1 truncate text-base text-muted">
+              <li key={r.id} className="flex items-start gap-2.5">
+                {/* The same box the Reminders tab shows, on the same state. */}
+                <button
+                  onClick={() => updateReminder(r.id, { done: true })}
+                  aria-label={`Mark ${reminderTitle(r.title)} done`}
+                  className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border border-edge2 text-transparent transition hover:border-accent"
+                >
+                  <Check size={12} />
+                </button>
+                <Link href="/reminders" className="min-w-0 flex-1 truncate text-base text-muted">
                   {reminderTitle(r.title)}
-                </span>
+                </Link>
                 <span className={`shrink-0 text-sm ${TONE[label.tone]}`}>{label.text}</span>
               </li>
             );
@@ -323,7 +385,7 @@ function RemindersWidget() {
       )}
 
       {overdue > 0 && <p className="mt-auto pt-3 text-sm text-dangerink">{overdue} overdue</p>}
-    </Link>
+    </div>
   );
 }
 

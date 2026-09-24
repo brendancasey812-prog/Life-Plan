@@ -54,14 +54,17 @@ export interface NoteBody {
 export interface NoteMeta {
   excerpt: string;
   /**
-   * The page's first few lines, one entry per paragraph, list item or
-   * checklist item — so a widget can stack them instead of running them
-   * together the way `excerpt` does.
+   * The page's first lines, one entry per paragraph, bullet or checklist
+   * item, each with its ticked state — so a widget can stack them instead of
+   * running them together the way `excerpt` does, and tick the same boxes the
+   * page shows.
    */
-  lines?: string[];
+  outline?: OutlineItem[];
   images: number;
   updatedAt: number;
 }
+
+import type { OutlineItem } from "./outline";
 
 /** The cards the entry tab is built from. */
 export type WidgetKind =

@@ -83,9 +83,19 @@ the default back. The same widget can appear more than once.
 | **Reminders** | The next four due, and how many are overdue. |
 | **Recent pages** | What you wrote last. |
 
-Each goal gets a line of its own on the goal cards. The index keeps a page's
-first lines — one per paragraph, bullet or checklist item — rather than only
-the flattened excerpt, which ran them together as prose.
+Each goal gets a line of its own on the goal cards, and a goal written as a
+checklist item gets a real box there: ticking it on the board writes into the
+page, and ticking it on the page shows on the board — the same box either way,
+because both read the one place it is stored. A plain paragraph has no box on
+the page, so it keeps a bullet; the editor's checklist button turns one into a
+goal you can tick. The Reminders card works the same way against the
+Reminders tab.
+
+The index keeps a page's first lines — one per paragraph, bullet or checklist
+item, each with its ticked state — rather than only the flattened excerpt,
+which ran them together as prose. Checklist state lives in the page's HTML, so
+[`src/lib/outline.ts`](src/lib/outline.ts) reads the markup rather than the
+plain text, which cannot say what is ticked.
 
 The two goal widgets are not summaries of anything — they read the very page
 the goal tabs and the bubbles open, so a line written on any of the three

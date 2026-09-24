@@ -358,7 +358,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 7,
+      version: 8,
       partialize: (s): PlanState => ({
         settings: s.settings,
         trees: s.trees,
@@ -399,10 +399,10 @@ export const usePlan = create<PlanStore>()(
           state.widgets = widgets;
         }
 
-        // The index gained per-line content. Rebuild every meta from its
-        // body so pages written before that show their goals stacked without
-        // having to be reopened and saved.
-        if (version < 7) {
+        // The index gained per-line content, then each line's ticked state.
+        // Rebuild every meta from its body so pages written before that show
+        // their goals stacked, and tickable, without being reopened.
+        if (version < 8) {
           try {
             const bodies = await allNotes();
             const notes = { ...(state.notes ?? {}) };
