@@ -39,6 +39,10 @@ export function OutlineList({
       ? [{ text: meta.excerpt, checkable: false }]
       : [];
 
+  // An index written before `checkable` existed has the field missing, not
+  // false. Only an explicit false means a line cannot take a box.
+  const canCheck = (item: { checkable?: boolean }) => item.checkable !== false;
+
   async function toggle(index: number, text: string) {
     if (!noteKey || busy) return;
     setBusy(true);
@@ -67,7 +71,7 @@ export function OutlineList({
     <ul className={`${size === "sm" ? "space-y-1" : "space-y-1.5"} ${className}`}>
       {items.slice(0, limit).map((item, i) => (
         <li key={i} className={`flex items-start gap-2.5 ${text}`}>
-          {item.checkable ? (
+          {canCheck(item) ? (
             <button
               onClick={(e) => {
                 // These sit inside cards that are themselves links.
