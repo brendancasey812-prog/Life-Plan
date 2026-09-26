@@ -91,10 +91,19 @@ export function OutlineList({
               <Check size={size === "sm" ? 11 : 12} />
             </button>
           ) : (
-            <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
+            // A heading or a quote is not a goal, so it gets no box — and no
+            // bullet either. It keeps the text column's indent and reads as
+            // the label it is, so every dot on a card is something to tick.
+            <span aria-hidden className={`${box} shrink-0`} />
           )}
           <span
-            className={`min-w-0 flex-1 truncate ${item.done ? "text-faint line-through" : "text-muted"}`}
+            className={`min-w-0 flex-1 truncate ${
+              item.done
+                ? "text-faint line-through"
+                : canCheck(item)
+                  ? "text-muted"
+                  : "font-medium text-faint"
+            }`}
           >
             {item.text}
           </span>

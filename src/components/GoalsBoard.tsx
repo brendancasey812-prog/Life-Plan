@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -23,19 +22,17 @@ export type { Scope };
  * page it opens is the very one behind the matching `Age N` or month bubble
  * in My Life, so writing here shows up there and the other way round.
  *
- * The tab opens on today, and the steppers walk to any other period in the
- * plan — the bubble behind it is generated on arrival if nobody has been
- * there yet.
+ * The steppers walk to any other period in the plan — the bubble behind it is
+ * generated on arrival if nobody has been there yet — and where they land is
+ * the plan's focus, so the header label and the dashboard's cards follow.
  */
 export function GoalsBoard({ scope }: { scope: Scope }) {
-  const [offset, setOffset] = useState(0);
-  const { period, noteKey, trail, canPrev, canNext } = useGoalPage(scope, offset);
+  const { period, noteKey, trail, canPrev, canNext, isToday, step, today } = useGoalPage(scope);
 
   const pathname = usePathname();
-  useGoHome(pathname, () => setOffset(0));
+  useGoHome(pathname, today);
 
   const unit = scope === "year" ? "year" : "month";
-  const step = (delta: number) => setOffset((o) => o + delta);
 
   if (!noteKey) {
     return (
@@ -73,9 +70,9 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
             <p className="text-xs font-medium tracking-[0.14em] text-accentink uppercase">
               {eyebrow}
             </p>
-            {offset !== 0 && (
+            {!isToday && (
               <button
-                onClick={() => setOffset(0)}
+                onClick={today}
                 className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
               >
                 <RotateCcw size={12} />

@@ -2,12 +2,13 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { findTimeline } from "./goals";
+import { findTimeline, todayKey, type PeriodKey, type Scope } from "./goals";
 import { byDue, reminderNoteKey } from "./reminders";
 import { allNotes, bubbleNoteKey, excerptOf, metaOf, weekNoteKey, writeNote } from "./notes";
 import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
 import type {
   Bubble,
+  Focus,
   NoteMeta,
   Page,
   PlanState,
@@ -32,7 +33,9 @@ export function defaultWidgets(): Widget[] {
   const kinds: [WidgetKind, 1 | 2 | 3][] = [
     ["age", 3],
     ["yearGoals", 3],
+    ["lastYearGoals", 3],
     ["monthGoals", 3],
+    ["lastMonthGoals", 3],
     ["reminders", 2],
     ["date", 1],
     ["weeks", 1],
@@ -51,6 +54,8 @@ interface Actions {
   /** Deletes the bubble and its descendants, returning their note keys. */
   deleteBubble: (tree: TreeId, id: string) => string[];
   setWeekDone: (age: number, week: number, done: boolean) => void;
+  /** Points the goal tabs, the header and the dashboard at a period. */
+  setFocus: (scope: Scope, key: PeriodKey | null) => void;
   /**
    * Generates whatever of the My Life timeline a period needs, so the goal
    * tabs and the bubbles are looking at exactly the same page.
@@ -77,9 +82,27 @@ interface Actions {
 
 export type PlanStore = PlanState & Actions;
 
+const NO_FOCUS: Focus = { year: null, month: null };
+
+/** October 2026: the month the plan is being written for. */
+const PLANNING: PeriodKey = { year: 2026, month: 9 };
+
+/**
+ * Where a plan starts out pointed. The monthly views open on the month being
+ * planned rather than the one running out; once today is past it, today is the
+ * better guess and they follow it again. Either way the chip on the goal tab
+ * steps back to today.
+ */
+function initialFocus(now = new Date()): Focus {
+  const today = todayKey("month", now);
+  const past = today.year > PLANNING.year || (today.year === PLANNING.year && today.month! > 9);
+  return { year: null, month: past ? null : PLANNING };
+}
+
 function emptyState(): PlanState {
   return {
     settings: { ...DEFAULT_SETTINGS },
+    focus: initialFocus(),
     trees: seedTrees(),
     weeks: {},
     pages: [],
@@ -260,6 +283,8 @@ export const usePlan = create<PlanStore>()(
         });
       },
 
+      setFocus: (scope, key) => set((s) => ({ focus: { ...s.focus, [scope]: key } })),
+
       resolveTimeline: (age, month) => {
         if (age < 0 || age > get().settings.lifespan) return;
         // Each step opens the level above before looking inside it; a level
@@ -358,9 +383,10 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 9,
+      version: 10,
       partialize: (s): PlanState => ({
         settings: s.settings,
+        focus: s.focus,
         trees: s.trees,
         weeks: s.weeks,
         pages: s.pages,
@@ -396,6 +422,27 @@ export const usePlan = create<PlanStore>()(
           );
           const [month] = widgets.splice(monthAt, 1);
           widgets.splice(widgets.findIndex((w) => w.kind === "yearGoals") + 1, 0, month);
+          state.widgets = widgets;
+        }
+
+        // Focus arrived with the period steppers; before them every view
+        // simply followed today, so an upgraded plan starts where a new one
+        // does rather than somewhere of its own.
+        if (version < 10) state.focus = initialFocus();
+        state.focus ??= { ...NO_FOCUS };
+
+        // The past-period cards are new, so a board arranged before them
+        // would never show them. Each goes beside the period it looks back
+        // from rather than at the end, where it would be missed.
+        const pairs: [WidgetKind, WidgetKind][] = [
+          ["yearGoals", "lastYearGoals"],
+          ["monthGoals", "lastMonthGoals"],
+        ];
+        for (const [beside, kind] of pairs) {
+          if (state.widgets.some((w) => w.kind === kind)) continue;
+          const at = state.widgets.findIndex((w) => w.kind === beside);
+          const widgets = [...state.widgets];
+          widgets.splice(at < 0 ? widgets.length : at + 1, 0, { id: newId("w"), kind, span: 3 });
           state.widgets = widgets;
         }
 
@@ -476,6 +523,7 @@ export function pageTitle(title: string): string {
 export function exportable(s: PlanState): PlanState {
   return {
     settings: s.settings,
+    focus: s.focus,
     trees: s.trees,
     weeks: s.weeks,
     pages: s.pages,
@@ -492,6 +540,7 @@ export function parsePlan(text: string): (PlanState & { noteBodies?: unknown }) 
     if (!data.trees?.life?.rootId || !data.trees?.map?.rootId) return null;
     return {
       settings: { ...DEFAULT_SETTINGS, ...data.settings },
+      focus: { ...NO_FOCUS, ...data.focus },
       trees: data.trees,
       weeks: data.weeks ?? {},
       pages: data.pages ?? [],

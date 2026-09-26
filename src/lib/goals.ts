@@ -2,47 +2,61 @@ import { MONTHS } from "./seed";
 import type { Bubble, Tree } from "./types";
 import { calendarYear } from "./weeks";
 
-export interface Period {
-  /** Calendar year the page covers. */
+/** Which of the two goal tabs a period belongs to. */
+export type Scope = "year" | "month";
+
+/**
+ * A period, as the plan stores it: a calendar year, plus a month for the
+ * monthly views. Absolute rather than an offset from today, so the header,
+ * the dashboard and the goal tabs can all be pointed at one month and still
+ * agree about it tomorrow.
+ */
+export interface PeriodKey {
   year: number;
-  /** 0–11 for a month page; undefined for a year page. */
+  /** 0–11 for a month; undefined for a whole year. */
   month?: number;
+}
+
+export interface Period extends PeriodKey {
   /** Age reached in that year — the timeline is indexed by age, not by year. */
   age: number;
   title: string;
 }
 
-/**
- * The period a goal tab is showing: this year or this month by default, or
- * `offset` steps away — a year for the yearly tab, a month for the monthly
- * one, so next month's page can be planned before it arrives.
- */
-export function periodFor(
-  birthDate: string,
-  lifespan: number,
-  scope: "year" | "month",
-  offset = 0,
-  now = new Date(),
-): Period {
-  const birthYear = calendarYear(birthDate, 0);
-  const ageIn = (year: number) => Math.min(Math.max(year - birthYear, 0), lifespan);
+/** The period today falls in. */
+export function todayKey(scope: Scope, now = new Date()): PeriodKey {
+  return scope === "year"
+    ? { year: now.getFullYear() }
+    : { year: now.getFullYear(), month: now.getMonth() };
+}
 
-  if (scope === "year") {
-    const year = now.getFullYear() + offset;
-    return { year, age: ageIn(year), title: `Yearly Goals — ${year}` };
-  }
-
+/** `delta` periods along — a month for a month key, a year for a year key. */
+export function stepKey(key: PeriodKey, delta: number): PeriodKey {
+  if (key.month === undefined) return { year: key.year + delta };
   // Day 1 keeps the step from skipping a short month.
-  const at = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-  const year = at.getFullYear();
-  const month = at.getMonth();
-  return { year, month, age: ageIn(year), title: `Monthly Goals — ${MONTHS[month]} ${year}` };
+  const at = new Date(key.year, key.month + delta, 1);
+  return { year: at.getFullYear(), month: at.getMonth() };
+}
+
+export function sameKey(a: PeriodKey, b: PeriodKey): boolean {
+  return a.year === b.year && a.month === b.month;
+}
+
+/** Fills a key out with the age it falls in and the heading to show. */
+export function periodOf(birthDate: string, lifespan: number, key: PeriodKey): Period {
+  const birthYear = calendarYear(birthDate, 0);
+  const age = Math.min(Math.max(key.year - birthYear, 0), lifespan);
+  const title =
+    key.month === undefined
+      ? `Yearly Goals — ${key.year}`
+      : `Monthly Goals — ${MONTHS[key.month]} ${key.year}`;
+  return { ...key, age, title };
 }
 
 /** Whether a period is inside the plan at all. */
-export function withinPlan(birthDate: string, lifespan: number, period: Period): boolean {
+export function withinPlan(birthDate: string, lifespan: number, key: PeriodKey): boolean {
   const birthYear = calendarYear(birthDate, 0);
-  return period.year >= birthYear && period.year <= birthYear + lifespan;
+  return key.year >= birthYear && key.year <= birthYear + lifespan;
 }
 
 export interface Found {

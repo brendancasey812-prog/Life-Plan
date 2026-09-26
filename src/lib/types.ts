@@ -65,6 +65,7 @@ export interface NoteMeta {
 }
 
 import type { OutlineItem } from "./outline";
+import type { PeriodKey } from "./goals";
 
 /** The cards the entry tab is built from. */
 export type WidgetKind =
@@ -72,6 +73,8 @@ export type WidgetKind =
   | "date"
   | "yearGoals"
   | "monthGoals"
+  | "lastYearGoals"
+  | "lastMonthGoals"
   | "bubbles"
   | "weeks"
   | "lifeMap"
@@ -110,8 +113,19 @@ export interface Settings {
   lifespan: number;
 }
 
+/**
+ * Which period the plan is pointed at. The goal tabs, the header labels and
+ * the dashboard's goal cards all read it, so stepping to a month on one of
+ * them moves the others with it. Null follows today.
+ */
+export interface Focus {
+  year: PeriodKey | null;
+  month: PeriodKey | null;
+}
+
 export interface PlanState {
   settings: Settings;
+  focus: Focus;
   trees: Record<TreeId, Tree>;
   weeks: Record<string, WeekEntry>;
   pages: Page[];

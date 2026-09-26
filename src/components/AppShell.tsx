@@ -15,8 +15,10 @@ import {
   Target,
 } from "lucide-react";
 import { MONTHS } from "@/lib/seed";
+import { todayKey } from "@/lib/goals";
 import { goHome } from "@/lib/goHome";
 import { useHydrated } from "@/lib/hydrated";
+import { usePlan } from "@/lib/store";
 import { SettingsPanel } from "./SettingsPanel";
 
 const nav = [
@@ -36,17 +38,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // trailingSlash: true means routes arrive as "/weeks/".
   const current = pathname.replace(/\/+$/, "") || "/";
 
-  // The goal tabs are dated, and the date is only knowable in the browser —
-  // this is a static site, so a build-time date would go stale on the shelf.
+  // The goal tabs carry the period they are pointed at, which is only knowable
+  // in the browser — this is a static site, so a build-time date would go
+  // stale on the shelf, and the focus itself is saved with the plan.
   const hydrated = useHydrated();
+  const focus = usePlan((s) => s.focus);
   const dated = useMemo(() => {
     if (!hydrated) return {} as Record<string, string>;
-    const now = new Date();
+    const year = focus.year ?? todayKey("year");
+    const month = focus.month ?? todayKey("month");
     return {
-      "/year": `${now.getFullYear()}`,
-      "/month": `${MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+      "/year": `${year.year}`,
+      "/month": `${MONTHS[month.month ?? 0]} ${month.year}`,
     };
-  }, [hydrated]);
+  }, [hydrated, focus]);
 
   return (
     <div className="flex h-screen flex-col">

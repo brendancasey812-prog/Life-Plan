@@ -10,6 +10,7 @@ import {
   CalendarRange,
   Cake,
   Compass,
+  History,
   ImageIcon,
   NotebookPen,
   Sparkles,
@@ -27,8 +28,10 @@ import { WEEKS_PER_YEAR, currentCell, weeksLived } from "@/lib/weeks";
 export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: typeof Cake }> = {
   age: { label: "Age", hint: "How far through the year you are", icon: Cake },
   date: { label: "Month & year", hint: "Today, at a glance", icon: CalendarDays },
-  yearGoals: { label: "Yearly goals", hint: "This year's page", icon: Target },
-  monthGoals: { label: "Monthly goals", hint: "This month's page", icon: CalendarDays },
+  yearGoals: { label: "Yearly goals", hint: "The year you are on", icon: Target },
+  monthGoals: { label: "Monthly goals", hint: "The month you are on", icon: CalendarDays },
+  lastYearGoals: { label: "Last year", hint: "The year before that one", icon: History },
+  lastMonthGoals: { label: "Last month", hint: "The month before that one", icon: History },
   weeks: { label: "Weeks lived", hint: "The 100-year grid, in one bar", icon: CalendarRange },
   bubbles: { label: "Life Plan", hint: "Into the decades", icon: Sparkles },
   lifeMap: { label: "Life Categories", hint: "What you build your life around", icon: Compass },
@@ -46,6 +49,10 @@ export function WidgetBody({ kind }: { kind: WidgetKind }) {
       return <GoalWidget scope="year" />;
     case "monthGoals":
       return <GoalWidget scope="month" />;
+    case "lastYearGoals":
+      return <GoalWidget scope="year" shift={-1} />;
+    case "lastMonthGoals":
+      return <GoalWidget scope="month" shift={-1} />;
     case "weeks":
       return <WeeksWidget />;
     case "bubbles":
@@ -112,19 +119,30 @@ function DateWidget() {
   );
 }
 
-/** The same page the goal tab and the bubble open — not a copy of it. */
-function GoalWidget({ scope }: { scope: Scope }) {
-  const { period, noteKey, meta, trail } = useGoalPage(scope);
+/**
+ * The same page the goal tab and the bubble open — not a copy of it. `shift`
+ * looks at a neighbouring period instead of the one in focus, which is what
+ * the two "last" cards are; opening one points the plan at it.
+ */
+function GoalWidget({ scope, shift = 0 }: { scope: Scope; shift?: number }) {
+  const { period, noteKey, meta, trail, pin } = useGoalPage(scope, shift);
   const href = scope === "year" ? "/year" : "/month";
   const [eyebrow, heading] = period.title.split(" — ");
+  const label = shift === -1 ? (scope === "year" ? "Last year" : "Last month") : eyebrow;
 
   return (
     <div className="flex h-full flex-col">
-      <Link href={href} className="block">
+      {/* Opening a neighbouring period moves the plan onto it, so the tab it
+          leads to shows that period rather than snapping back. */}
+      <Link href={href} onClick={shift ? pin : undefined} className="block">
         <span className="flex items-start justify-between gap-2">
           <span className="min-w-0">
-            <span className="block text-xs font-medium tracking-[0.14em] text-accentink uppercase">
-              {eyebrow}
+            <span
+              className={`block text-xs font-medium tracking-[0.14em] uppercase ${
+                shift ? "text-faint" : "text-accentink"
+              }`}
+            >
+              {label}
             </span>
             <span className="block text-2xl font-semibold tracking-tight">{heading}</span>
           </span>
