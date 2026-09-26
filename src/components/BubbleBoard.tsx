@@ -11,6 +11,7 @@ import { usePlan } from "@/lib/store";
 import type { Bubble, NoteMeta, TreeId } from "@/lib/types";
 import { calendarYear } from "@/lib/weeks";
 import { NoteSheet } from "./NoteSheet";
+import { OutlineList } from "./OutlineList";
 
 /** Placeholder id for the dashed "add a bubble" circle in the ring. */
 const ADD = "__add__";
@@ -306,7 +307,11 @@ export function BubbleBoard({
       </div>
 
       {focus && (
-        <NoteBar meta={notes[bubbleNoteKey(treeId, focus.id)]} onOpen={() => setNotesOpen(true)} />
+        <NoteBar
+          meta={notes[bubbleNoteKey(treeId, focus.id)]}
+          noteKey={bubbleNoteKey(treeId, focus.id)}
+          onOpen={() => setNotesOpen(true)}
+        />
       )}
 
       {focus && notesOpen && (
@@ -444,22 +449,32 @@ function IconButton({
   );
 }
 
-/** The strip under the canvas: a peek at the focused bubble's page. */
-function NoteBar({ meta, onOpen }: { meta?: NoteMeta; onOpen: () => void }) {
+/** The strip under the canvas: the focused bubble's page, tickable in place. */
+function NoteBar({
+  meta,
+  noteKey,
+  onOpen,
+}: {
+  meta?: NoteMeta;
+  noteKey: string;
+  onOpen: () => void;
+}) {
   return (
-    <button
-      onClick={onOpen}
-      className="flex shrink-0 items-center gap-3 border-t border-edge px-4 py-3 text-left transition hover:bg-surface sm:px-6"
-    >
-      <NotebookPen size={16} className="shrink-0 text-accentink" />
-      <span className="min-w-0 flex-1 truncate text-sm text-muted">
-        {meta?.excerpt || (meta?.images ? "" : "Add notes, screenshots and pictures…")}
-      </span>
-      {!!meta?.images && (
-        <span className="flex shrink-0 items-center gap-1 text-xs text-faint">
-          <ImageIcon size={13} /> {meta.images}
-        </span>
-      )}
-    </button>
+    <div className="shrink-0 border-t border-edge px-4 py-3 sm:px-6">
+      <div className="flex items-center gap-3">
+        <NotebookPen size={16} className="shrink-0 text-accentink" />
+        <button onClick={onOpen} className="min-w-0 flex-1 text-left text-sm text-muted">
+          {meta?.outline?.length || meta?.excerpt
+            ? "Notes"
+            : "Add notes, screenshots and pictures…"}
+        </button>
+        {!!meta?.images && (
+          <span className="flex shrink-0 items-center gap-1 text-xs text-faint">
+            <ImageIcon size={13} /> {meta.images}
+          </span>
+        )}
+      </div>
+      <OutlineList meta={meta} noteKey={noteKey} limit={3} size="sm" className="mt-1.5 pl-7" />
+    </div>
   );
 }

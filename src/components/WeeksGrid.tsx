@@ -8,6 +8,7 @@ import { weekNoteKey } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
 import { WEEKS_PER_YEAR, currentCell, formatRange, weekKey } from "@/lib/weeks";
 import { NoteSheet } from "./NoteSheet";
+import { OutlineList } from "./OutlineList";
 
 const CELL = 13;
 const GAP = 2;
@@ -151,10 +152,15 @@ export function WeeksGrid() {
                   </span>
                 )}
               </span>
-              <span className="mt-1.5 line-clamp-4 block text-sm text-muted">
-                {meta?.excerpt || (meta?.images ? "" : "What is this week for?")}
-              </span>
             </button>
+            <OutlineList
+              meta={meta}
+              noteKey={weekNoteKey(selected.age, selected.week)}
+              limit={4}
+              size="sm"
+              empty="What is this week for?"
+              className="px-3"
+            />
 
             <button
               onClick={() => setWeekDone(selected.age, selected.week, !entry?.done)}

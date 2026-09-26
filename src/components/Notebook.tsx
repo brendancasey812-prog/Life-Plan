@@ -10,6 +10,7 @@ import { pageTitle, usePlan } from "@/lib/store";
 import type { NoteMeta, TreeId } from "@/lib/types";
 import { formatRange } from "@/lib/weeks";
 import { NoteSheet } from "./NoteSheet";
+import { OutlineList } from "./OutlineList";
 
 type Kind = "page" | "bubble" | "week" | "reminder";
 
@@ -164,8 +165,14 @@ export function Notebook() {
                       )}
                     </span>
                     <span className="truncate text-xs text-faint">{entry.context}</span>
-                    <span className="line-clamp-3 text-sm text-muted">
-                      {entry.meta?.excerpt || "Empty"}
+                    <span className="block">
+                      <OutlineList
+                        meta={entry.meta}
+                        noteKey={entry.key}
+                        limit={3}
+                        size="sm"
+                        empty="Empty"
+                      />
                     </span>
                   </button>
                 </li>

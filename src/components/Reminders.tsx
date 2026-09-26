@@ -8,6 +8,7 @@ import { deleteNotes } from "@/lib/notes";
 import { byDue, dueLabel, reminderNoteKey, reminderTitle, type DueTone } from "@/lib/reminders";
 import { usePlan } from "@/lib/store";
 import { NoteSheet } from "./NoteSheet";
+import { OutlineList } from "./OutlineList";
 
 const TONE: Record<DueTone, string> = {
   overdue: "text-dangerink",
@@ -87,47 +88,53 @@ export function Reminders() {
                 return (
                   <li
                     key={r.id}
-                    className={`pane flex items-start gap-3 rounded-xl border border-edge bg-surface p-4 transition hover:border-edge2 hover:bg-surface2 ${
+                    className={`pane rounded-xl border border-edge bg-surface p-4 transition hover:border-edge2 hover:bg-surface2 ${
                       r.done ? "opacity-60" : ""
                     }`}
                   >
-                    <button
-                      onClick={() => updateReminder(r.id, { done: !r.done })}
-                      aria-label={
-                        r.done
-                          ? `Mark ${reminderTitle(r.title)} not done`
-                          : `Mark ${reminderTitle(r.title)} done`
-                      }
-                      aria-pressed={r.done}
-                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${
-                        r.done
-                          ? "border-transparent bg-done text-white"
-                          : "border-edge2 text-transparent hover:border-accent"
-                      }`}
-                    >
-                      <Check size={13} />
-                    </button>
-
-                    <button onClick={() => setOpenId(r.id)} className="min-w-0 flex-1 text-left">
-                      <span
-                        className={`block truncate text-sm font-medium ${r.done ? "line-through" : ""}`}
+                    <div className="flex items-start gap-3">
+                      <button
+                        onClick={() => updateReminder(r.id, { done: !r.done })}
+                        aria-label={
+                          r.done
+                            ? `Mark ${reminderTitle(r.title)} not done`
+                            : `Mark ${reminderTitle(r.title)} done`
+                        }
+                        aria-pressed={r.done}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${
+                          r.done
+                            ? "border-transparent bg-done text-white"
+                            : "border-edge2 text-transparent hover:border-accent"
+                        }`}
                       >
-                        {reminderTitle(r.title)}
-                      </span>
-                      <span className={`mt-0.5 flex items-center gap-2 text-xs ${TONE[due.tone]}`}>
-                        {r.done ? "Done" : due.text}
-                        {!!meta?.images && (
-                          <span className="flex items-center gap-1 text-faint">
-                            <ImageIcon size={12} /> {meta.images}
-                          </span>
-                        )}
-                      </span>
-                      {meta?.excerpt && (
-                        <span className="mt-1.5 line-clamp-2 block text-sm text-muted">
-                          {meta.excerpt}
+                        <Check size={13} />
+                      </button>
+
+                      <button onClick={() => setOpenId(r.id)} className="min-w-0 flex-1 text-left">
+                        <span
+                          className={`block truncate text-sm font-medium ${r.done ? "line-through" : ""}`}
+                        >
+                          {reminderTitle(r.title)}
                         </span>
-                      )}
-                    </button>
+                        <span
+                          className={`mt-0.5 flex items-center gap-2 text-xs ${TONE[due.tone]}`}
+                        >
+                          {r.done ? "Done" : due.text}
+                          {!!meta?.images && (
+                            <span className="flex items-center gap-1 text-faint">
+                              <ImageIcon size={12} /> {meta.images}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    </div>
+                    <OutlineList
+                      meta={meta}
+                      noteKey={reminderNoteKey(r.id)}
+                      limit={3}
+                      size="sm"
+                      className="mt-2 pl-8"
+                    />
                   </li>
                 );
               })}

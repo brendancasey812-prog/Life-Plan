@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -15,11 +15,10 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
-import { metaOf, readNote, updateNote } from "@/lib/notes";
-import { toggleOutlineItem, type OutlineItem } from "@/lib/outline";
 import { planetStyle } from "@/lib/planet";
 import { byDue, daysUntil, dueLabel, reminderTitle, type DueTone } from "@/lib/reminders";
 import { MONTHS } from "@/lib/seed";
+import { OutlineList } from "./OutlineList";
 import { usePlan } from "@/lib/store";
 import type { NoteMeta, WidgetKind } from "@/lib/types";
 import { useGoalPage, type Scope } from "@/lib/useGoalPage";
@@ -135,98 +134,19 @@ function GoalWidget({ scope }: { scope: Scope }) {
           {trail.join("  ›  ") || "Life Plan"}
         </span>
       </Link>
-      <GoalLines meta={meta} noteKey={noteKey} href={href} />
+      <div className="mt-3 flex-1">
+        <OutlineList
+          meta={meta}
+          noteKey={noteKey}
+          empty="Nothing written yet — open it to start."
+        />
+      </div>
       {!!meta?.images && (
         <span className="mt-2.5 flex items-center gap-1.5 text-sm text-faint">
           <ImageIcon size={13} /> {meta.images} picture{meta.images === 1 ? "" : "s"}
         </span>
       )}
     </div>
-  );
-}
-
-/** How many goals a card lists before it says how many are left. */
-const SHOWN = 5;
-
-/**
- * Every goal on a line of its own. A goal written as a checklist item gets a
- * real box here, and ticking it writes straight into the page — the same page
- * the goal tab and the timeline bubble open, so all three agree. A plain
- * paragraph has no box on the page either, so it keeps a bullet.
- */
-function GoalLines({
-  meta,
-  noteKey,
-  href,
-}: {
-  meta?: NoteMeta;
-  noteKey: string | null;
-  href: string;
-}) {
-  const setNoteMeta = usePlan((s) => s.setNoteMeta);
-  const [busy, setBusy] = useState<number | null>(null);
-
-  const items: OutlineItem[] = meta?.outline?.length
-    ? meta.outline
-    : // A page indexed before the outline existed still has its excerpt.
-      meta?.excerpt
-      ? [{ text: meta.excerpt }]
-      : [];
-
-  async function toggle(index: number, text: string) {
-    if (!noteKey) return;
-    setBusy(index);
-    try {
-      const body = await readNote(noteKey);
-      const html = body && toggleOutlineItem(body.html, index, text);
-      if (!html) return;
-      setNoteMeta(noteKey, metaOf(await updateNote(noteKey, { html })));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  if (items.length === 0) {
-    return (
-      <p className="mt-3 flex-1 text-base text-muted">
-        {meta?.images ? "" : "Nothing written yet — open it to start."}
-      </p>
-    );
-  }
-
-  return (
-    <ul className="mt-3 flex-1 space-y-1.5">
-      {items.slice(0, SHOWN).map((item, i) => (
-        <li key={i} className="flex items-start gap-2.5 text-base">
-          {item.done === undefined ? (
-            <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
-          ) : (
-            <button
-              onClick={() => void toggle(i, item.text)}
-              disabled={busy !== null}
-              aria-pressed={item.done}
-              aria-label={item.done ? `Untick ${item.text}` : `Tick ${item.text}`}
-              className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border transition ${
-                item.done
-                  ? "border-transparent bg-done text-white"
-                  : "border-edge2 text-transparent hover:border-accent"
-              }`}
-            >
-              <Check size={12} />
-            </button>
-          )}
-          <Link
-            href={href}
-            className={`min-w-0 flex-1 truncate ${item.done ? "text-faint line-through" : "text-muted"}`}
-          >
-            {item.text}
-          </Link>
-        </li>
-      ))}
-      {items.length > SHOWN && (
-        <li className="pl-[28px] text-sm text-faint">+{items.length - SHOWN} more</li>
-      )}
-    </ul>
   );
 }
 
@@ -315,25 +235,23 @@ function RecentNotesWidget() {
   const notes = usePlan((s) => s.notes);
   const recent = Object.entries(notes)
     .sort(([, a], [, b]) => b.updatedAt - a.updatedAt)
-    .slice(0, 3) as [string, NoteMeta][];
+    .slice(0, 2) as [string, NoteMeta][];
   return (
-    <Link href="/notes" className="flex h-full flex-col">
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-base font-medium">Recent pages</h3>
+    <div className="flex h-full flex-col">
+      <Link href="/notes" className="flex items-baseline justify-between gap-2">
+        <span className="text-base font-medium">Recent pages</span>
         <ArrowUpRight size={17} className="shrink-0 text-faint" />
-      </div>
+      </Link>
       {recent.length === 0 ? (
         <p className="mt-3 text-base text-faint">Nothing written yet.</p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <div className="mt-3 space-y-3">
           {recent.map(([key, meta]) => (
-            <li key={key} className="line-clamp-2 text-base text-muted">
-              {meta.excerpt || "A page of pictures"}
-            </li>
+            <OutlineList key={key} meta={meta} noteKey={key} limit={3} size="sm" />
           ))}
-        </ul>
+        </div>
       )}
-    </Link>
+    </div>
   );
 }
 

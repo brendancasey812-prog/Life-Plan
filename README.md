@@ -83,13 +83,18 @@ the default back. The same widget can appear more than once.
 | **Reminders** | The next four due, and how many are overdue. |
 | **Recent pages** | What you wrote last. |
 
-Each goal gets a line of its own on the goal cards, and a goal written as a
-checklist item gets a real box there: ticking it on the board writes into the
-page, and ticking it on the page shows on the board — the same box either way,
-because both read the one place it is stored. A plain paragraph has no box on
-the page, so it keeps a bullet; the editor's checklist button turns one into a
-goal you can tick. The Reminders card works the same way against the
-Reminders tab.
+Each goal gets a line of its own, with a box beside it, everywhere the page it
+lives on is referenced: the Overview's goal and recent-page cards, the strip
+under a bubble, a week's panel, the Notes tab and a reminder's card. Ticking
+one writes into the page itself, so every one of those views agrees and the
+editor shows the same tick next time it is opened.
+
+A goal does not have to be written as a checklist to be ticked. Tick a plain
+paragraph and it becomes a one-item checklist; tick a bullet and its list
+becomes a checklist, since a list cannot be half one kind and half the other.
+Headings, quotes and code blocks are left alone — they are not goals, so they
+keep a bullet. The Reminders card works the same way against the Reminders
+tab.
 
 The index keeps a page's first lines — one per paragraph, bullet or checklist
 item, each with its ticked state — rather than only the flattened excerpt,

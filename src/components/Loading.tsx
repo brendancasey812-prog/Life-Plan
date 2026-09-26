@@ -1,5 +1,3 @@
 export function Loading() {
-  return (
-    <div className="flex h-full items-center justify-center text-sm text-faint">Loading…</div>
-  );
+  return <div className="flex h-full items-center justify-center text-sm text-faint">Loading…</div>;
 }
