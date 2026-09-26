@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, ImageIcon, Sparkles } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import {
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
+import { useGoHome } from "@/lib/goHome";
 import { useGoalPage, type Scope } from "@/lib/useGoalPage";
 import { NoteEditor } from "./NoteEditor";
 import { NoteGallery } from "./NoteGallery";
@@ -9,12 +19,23 @@ import { NoteGallery } from "./NoteGallery";
 export type { Scope };
 
 /**
- * A notepad for this year's or this month's goals. It is not a separate copy:
- * the page it opens is the very one behind the matching `Age N` or month
- * bubble in My Life, so writing here shows up there and the other way round.
+ * A notepad for a year's or a month's goals. It is not a separate copy: the
+ * page it opens is the very one behind the matching `Age N` or month bubble
+ * in My Life, so writing here shows up there and the other way round.
+ *
+ * The tab opens on today, and the steppers walk to any other period in the
+ * plan — the bubble behind it is generated on arrival if nobody has been
+ * there yet.
  */
 export function GoalsBoard({ scope }: { scope: Scope }) {
-  const { period, noteKey, trail } = useGoalPage(scope);
+  const [offset, setOffset] = useState(0);
+  const { period, noteKey, trail, canPrev, canNext } = useGoalPage(scope, offset);
+
+  const pathname = usePathname();
+  useGoHome(pathname, () => setOffset(0));
+
+  const unit = scope === "year" ? "year" : "month";
+  const step = (delta: number) => setOffset((o) => o + delta);
 
   if (!noteKey) {
     return (
@@ -48,11 +69,40 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
                 "radial-gradient(120% 140% at 0% 0%, rgba(99,102,241,0.22), transparent 62%), radial-gradient(100% 160% at 100% 0%, rgba(45,212,191,0.14), transparent 60%)",
             }}
           />
-          <p className="text-xs font-medium tracking-[0.14em] text-accentink uppercase">
-            {eyebrow}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-medium tracking-[0.14em] text-accentink uppercase">
+              {eyebrow}
+            </p>
+            {offset !== 0 && (
+              <button
+                onClick={() => setOffset(0)}
+                className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
+              >
+                <RotateCcw size={12} />
+                {scope === "year" ? "This year" : "This month"}
+              </button>
+            )}
+          </div>
           <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{heading}</h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => step(-1)}
+                disabled={!canPrev}
+                aria-label={`Previous ${unit}`}
+                className="rounded-full border border-edge bg-surface p-1.5 text-muted transition hover:bg-surface2 hover:text-fg disabled:pointer-events-none disabled:opacity-35"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{heading}</h1>
+              <button
+                onClick={() => step(1)}
+                disabled={!canNext}
+                aria-label={`Next ${unit}`}
+                className="rounded-full border border-edge bg-surface p-1.5 text-muted transition hover:bg-surface2 hover:text-fg disabled:pointer-events-none disabled:opacity-35"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
             <Link
               href="/life"
               className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"

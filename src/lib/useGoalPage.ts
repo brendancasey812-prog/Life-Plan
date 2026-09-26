@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { currentPeriod, findTimeline, trailOf, type Period } from "./goals";
+import { findTimeline, periodFor, trailOf, withinPlan, type Period } from "./goals";
 import { bubbleNoteKey } from "./notes";
 import { usePlan } from "./store";
 import type { NoteMeta } from "./types";
@@ -10,6 +10,11 @@ export type Scope = "year" | "month";
 
 export interface GoalPage {
   period: Period;
+  /** False once a step has gone past the start or end of the plan. */
+  inPlan: boolean;
+  /** Whether stepping back or forward would stay inside the plan. */
+  canPrev: boolean;
+  canNext: boolean;
   /** The `Age N` or month bubble this page belongs to, once it exists. */
   bubbleId: string | null;
   /** The note key the goal tab and the bubble both open. */
@@ -24,16 +29,19 @@ export interface GoalPage {
  * builds the part of it the page needs, which is what ties the goal tabs, the
  * widgets and the bubbles to one shared page rather than three copies.
  */
-export function useGoalPage(scope: Scope): GoalPage {
+export function useGoalPage(scope: Scope, offset = 0): GoalPage {
   const tree = usePlan((s) => s.trees.life);
   const { birthDate, lifespan } = usePlan((s) => s.settings);
   const notes = usePlan((s) => s.notes);
   const resolveTimeline = usePlan((s) => s.resolveTimeline);
 
   const period = useMemo(
-    () => currentPeriod(birthDate, lifespan)[scope === "year" ? 0 : 1],
-    [birthDate, lifespan, scope],
+    () => periodFor(birthDate, lifespan, scope, offset),
+    [birthDate, lifespan, scope, offset],
   );
+  const inPlan = withinPlan(birthDate, lifespan, period);
+  const stepFits = (delta: number) =>
+    withinPlan(birthDate, lifespan, periodFor(birthDate, lifespan, scope, offset + delta));
   const found = useMemo(
     () => findTimeline(tree, period.age, period.month),
     [tree, period.age, period.month],
@@ -48,6 +56,9 @@ export function useGoalPage(scope: Scope): GoalPage {
 
   return {
     period,
+    inPlan,
+    canPrev: stepFits(-1),
+    canNext: stepFits(1),
     bubbleId,
     noteKey,
     meta: noteKey ? notes[noteKey] : undefined,

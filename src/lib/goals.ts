@@ -12,20 +12,37 @@ export interface Period {
   title: string;
 }
 
-/** The year and month the goal tabs open on: this one. */
-export function currentPeriod(birthDate: string, lifespan: number, now = new Date()): Period[] {
-  const year = now.getFullYear();
+/**
+ * The period a goal tab is showing: this year or this month by default, or
+ * `offset` steps away — a year for the yearly tab, a month for the monthly
+ * one, so next month's page can be planned before it arrives.
+ */
+export function periodFor(
+  birthDate: string,
+  lifespan: number,
+  scope: "year" | "month",
+  offset = 0,
+  now = new Date(),
+): Period {
   const birthYear = calendarYear(birthDate, 0);
-  const age = Math.min(Math.max(year - birthYear, 0), lifespan);
-  return [
-    { year, age, title: `Yearly Goals — ${year}` },
-    {
-      year,
-      month: now.getMonth(),
-      age,
-      title: `Monthly Goals — ${MONTHS[now.getMonth()]} ${year}`,
-    },
-  ];
+  const ageIn = (year: number) => Math.min(Math.max(year - birthYear, 0), lifespan);
+
+  if (scope === "year") {
+    const year = now.getFullYear() + offset;
+    return { year, age: ageIn(year), title: `Yearly Goals — ${year}` };
+  }
+
+  // Day 1 keeps the step from skipping a short month.
+  const at = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const year = at.getFullYear();
+  const month = at.getMonth();
+  return { year, month, age: ageIn(year), title: `Monthly Goals — ${MONTHS[month]} ${year}` };
+}
+
+/** Whether a period is inside the plan at all. */
+export function withinPlan(birthDate: string, lifespan: number, period: Period): boolean {
+  const birthYear = calendarYear(birthDate, 0);
+  return period.year >= birthYear && period.year <= birthYear + lifespan;
 }
 
 export interface Found {
