@@ -35,6 +35,19 @@ function subtitleFor(node: Bubble, birthDate: string): string {
   return from === to ? String(from) : `${from} – ${to}`;
 }
 
+/**
+ * Whether a timeline bubble is the period we are in now. Measured on the
+ * calendar the bubbles are labelled with — the months under `Age 25` are that
+ * bubble's own 2026 — so the mark lands on the same bubble the goal tabs open
+ * rather than on the one the week grid's birthday-based age would pick.
+ */
+function isNow(node: Bubble, birthDate: string, now: Date): boolean {
+  if (node.ageFrom === undefined) return false;
+  const age = now.getFullYear() - calendarYear(birthDate, 0);
+  if (age < node.ageFrom || age > (node.ageTo ?? node.ageFrom)) return false;
+  return node.month === undefined || node.month === now.getMonth();
+}
+
 export function BubbleBoard({
   treeId,
   hint,
@@ -52,6 +65,10 @@ export function BubbleBoard({
   const renameBubble = usePlan((s) => s.renameBubble);
   const deleteBubble = usePlan((s) => s.deleteBubble);
   const notes = usePlan((s) => s.notes);
+
+  // One reading of the clock for the whole board, so every level agrees on
+  // which bubble is now.
+  const today = useMemo(() => new Date(), []);
 
   const [focusId, setFocusId] = useState<string | null>(showRoot ? null : tree.rootId);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -198,11 +215,13 @@ export function BubbleBoard({
                   ...planetStyle(focus.hue, cR, true),
                 }}
               >
+                {isNow(focus, birthDate, today) && <NowHalo radius={cR} />}
                 <Label
                   node={focus}
                   radius={cR}
                   birthDate={birthDate}
                   hasNote={!!notes[bubbleNoteKey(treeId, focus.id)]}
+                  now={isNow(focus, birthDate, today)}
                 />
               </div>
             )}
@@ -254,6 +273,7 @@ export function BubbleBoard({
                         radius={spot.r}
                         birthDate={birthDate}
                         hasNote={!!notes[bubbleNoteKey(treeId, node.id)]}
+                        now={isNow(node, birthDate, today)}
                       />
                     </button>
                   ) : (
@@ -265,6 +285,8 @@ export function BubbleBoard({
                       <Plus size={Math.max(14, Math.min(spot.r * 0.7, 30))} />
                     </button>
                   )}
+
+                  {node && isNow(node, birthDate, today) && <NowHalo radius={spot.r} />}
 
                   {node && editingId !== node.id && (
                     <div className="pointer-events-none absolute -top-1 right-0 flex gap-1 opacity-0 transition group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100">
@@ -375,11 +397,14 @@ function Label({
   radius,
   birthDate,
   hasNote,
+  now = false,
 }: {
   node: Bubble;
   radius: number;
   birthDate: string;
   hasNote: boolean;
+  /** The period we are in now, which the halo rings and this labels. */
+  now?: boolean;
 }) {
   const box = radius * 1.68;
   // A single long word cannot wrap, so shrink the text until it fits across
@@ -398,8 +423,40 @@ function Label({
           {subtitle}
         </span>
       )}
+      {now && radius > 26 && (
+        <span
+          className="mt-1 rounded-full bg-white px-1.5 font-semibold tracking-[0.08em] text-accentink"
+          style={{ fontSize: Math.max(7.5, Math.min(size * 0.52, 11)) }}
+        >
+          NOW
+        </span>
+      )}
       {hasNote && <span className="mt-1 block h-1 w-1 rounded-full bg-white/80" aria-hidden />}
     </span>
+  );
+}
+
+/**
+ * The mark on the period we are in. A white ring with a dark one outside it
+ * reads on any planet colour and in either theme, which a single accent ring
+ * does not — several of the planets are already close to the accent.
+ */
+function NowHalo({ radius }: { radius: number }) {
+  const gap = Math.max(4, radius * 0.11);
+  const ring = Math.max(2, Math.min(radius * 0.05, 4));
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute rounded-full"
+      style={{
+        inset: -gap,
+        boxShadow: [
+          `0 0 0 ${ring}px rgb(255 255 255 / 0.92)`,
+          `0 0 0 ${(ring * 2).toFixed(1)}px rgb(0 0 0 / 0.5)`,
+          `0 0 ${(radius * 0.5).toFixed(1)}px ${(radius * 0.1).toFixed(1)}px var(--accent)`,
+        ].join(", "),
+      }}
+    />
   );
 }
 
