@@ -85,8 +85,8 @@ export type WidgetKind =
 export interface Widget {
   id: string;
   kind: WidgetKind;
-  /** Columns it takes on a wide screen, out of three. */
-  span: 1 | 2 | 3;
+  /** Columns it takes on a wide screen, out of four. */
+  span: 1 | 2 | 3 | 4;
 }
 
 /** Something to do, with a page of its own behind it. */

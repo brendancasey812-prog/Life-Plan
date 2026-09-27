@@ -30,16 +30,17 @@ const DEFAULT_SETTINGS: Settings = {
 
 /** What the entry tab starts as: age first, then the rest of the plan. */
 export function defaultWidgets(): Widget[] {
-  const kinds: [WidgetKind, 1 | 2 | 3][] = [
-    ["age", 3],
-    ["yearGoals", 3],
-    ["lastYearGoals", 3],
-    ["monthGoals", 3],
-    ["lastMonthGoals", 3],
+  const kinds: [WidgetKind, 1 | 2 | 3 | 4][] = [
+    ["age", 4],
+    ["yearGoals", 4],
+    ["lastYearGoals", 4],
+    ["monthGoals", 4],
+    ["lastMonthGoals", 4],
+    // A row of four: the day, what is due, and the week ahead.
     ["date", 1],
-    ["weeklyGoals", 2],
     ["reminders", 2],
     ["weeks", 1],
+    ["weeklyGoals", 2],
     ["bubbles", 1],
     ["lifeMap", 1],
     ["recentNotes", 1],
@@ -70,9 +71,11 @@ interface Actions {
   deletePage: (id: string) => void;
   addWidget: (kind: WidgetKind) => void;
   removeWidget: (id: string) => void;
-  resizeWidget: (id: string, span: 1 | 2 | 3) => void;
+  resizeWidget: (id: string, span: 1 | 2 | 3 | 4) => void;
   /** Drops the dragged card into the slot the other one occupies. */
   moveWidget: (fromId: string, toId: string) => void;
+  /** Shifts a card one slot back or forward, for boards without a mouse. */
+  nudgeWidget: (id: string, delta: -1 | 1) => void;
   resetWidgets: () => void;
   /** Records what a note page holds; null once the page is empty or gone. */
   setNoteMeta: (key: string, meta: NoteMeta | null) => void;
@@ -369,6 +372,17 @@ export const usePlan = create<PlanStore>()(
           return { widgets };
         }),
 
+      nudgeWidget: (id, delta) =>
+        set((s) => {
+          const from = s.widgets.findIndex((w) => w.id === id);
+          const to = from + delta;
+          if (from < 0 || to < 0 || to >= s.widgets.length) return {};
+          const widgets = [...s.widgets];
+          const [moved] = widgets.splice(from, 1);
+          widgets.splice(to, 0, moved);
+          return { widgets };
+        }),
+
       resetWidgets: () => set({ widgets: defaultWidgets() }),
 
       setNoteMeta: (key, meta) =>
@@ -384,7 +398,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 11,
+      version: 12,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -462,6 +476,41 @@ export const usePlan = create<PlanStore>()(
           const at = rest.findIndex((w) => w.kind === "reminders");
           rest.splice(at < 0 ? rest.length : at, 0, ...pair);
           state.widgets = rest;
+        }
+
+        // The board went from three columns to four. A card that filled the
+        // old row should still fill the new one; the rest keep their width,
+        // which they can now change to any of the four.
+        if (version < 12) {
+          state.widgets = state.widgets.map((w) => (w.span === 3 ? { ...w, span: 4 } : w));
+
+          // The date card belongs beside what is due, which the old three-wide
+          // row could not hold together. Ordering alone will not do it: a
+          // two-column card ahead of the pair leaves a single slot, and the
+          // wider of them drops to the next row. So the short cards are dealt
+          // into rows that fill — the day, what is due and the week; then the
+          // standing list with the two bubble cards.
+          const ROWS: WidgetKind[] = [
+            "date",
+            "reminders",
+            "weeks",
+            "weeklyGoals",
+            "bubbles",
+            "lifeMap",
+            "recentNotes",
+          ];
+          const rank = (w: Widget, i: number) => {
+            const at = ROWS.indexOf(w.kind);
+            // A card of the user's own stays where it was, after the rest.
+            return at < 0 ? ROWS.length + i : at;
+          };
+          const full = state.widgets.filter((w) => w.span === 4);
+          const short = state.widgets
+            .map((w, i) => ({ w, i }))
+            .filter(({ w }) => w.span !== 4)
+            .sort((a, b) => rank(a.w, a.i) - rank(b.w, b.i))
+            .map(({ w }) => w);
+          state.widgets = [...full, ...short];
         }
 
         // The index gained per-line content, then each line's ticked state,

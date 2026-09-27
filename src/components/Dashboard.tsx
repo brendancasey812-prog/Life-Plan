@@ -1,16 +1,31 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Check, GripVertical, LayoutGrid, Plus, RotateCcw, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  GripVertical,
+  LayoutGrid,
+  Plus,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { useGoHome } from "@/lib/goHome";
 import { usePlan } from "@/lib/store";
 import type { Widget, WidgetKind } from "@/lib/types";
 import { WIDGETS, WidgetBody } from "./widgets";
 
-const SPANS: Record<1 | 2 | 3, string> = {
+/**
+ * How wide a card sits on the board. Four columns on a wide screen, two on a
+ * tablet — where anything wider than one column simply takes the row — and one
+ * on a phone, so a card is never narrower than it can be read at.
+ */
+const SPANS: Record<1 | 2 | 3 | 4, string> = {
   1: "lg:col-span-1",
-  2: "lg:col-span-2",
-  3: "lg:col-span-3",
+  2: "sm:col-span-2 lg:col-span-2",
+  3: "sm:col-span-2 lg:col-span-3",
+  4: "sm:col-span-2 lg:col-span-4",
 };
 
 /** The entry tab: a board of cards you arrange yourself. */
@@ -20,6 +35,7 @@ export function Dashboard() {
   const removeWidget = usePlan((s) => s.removeWidget);
   const resizeWidget = usePlan((s) => s.resizeWidget);
   const moveWidget = usePlan((s) => s.moveWidget);
+  const nudgeWidget = usePlan((s) => s.nudgeWidget);
   const resetWidgets = usePlan((s) => s.resetWidgets);
 
   const [editing, setEditing] = useState(false);
@@ -96,8 +112,9 @@ export function Dashboard() {
               </ul>
             )}
             <p className="mt-3 text-xs text-faint">
-              Drag a card to reorder it, or use the size buttons. The same widget can appear more
-              than once.
+              The board is four columns wide and as long as you need. Drag a card to move it, or use
+              the arrows beside its name, and 1 – 4 to set how many columns it takes. The same
+              widget can appear more than once.
             </p>
           </div>
         )}
@@ -107,7 +124,7 @@ export function Dashboard() {
             No widgets. Hit <span className="text-muted">Customise</span> to add some.
           </p>
         ) : (
-          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {widgets.map((w) => (
               <li
                 key={w.id}
@@ -139,6 +156,7 @@ export function Dashboard() {
                   editing={editing}
                   onRemove={() => removeWidget(w.id)}
                   onResize={(span) => resizeWidget(w.id, span)}
+                  onNudge={(delta) => nudgeWidget(w.id, delta)}
                 />
               </li>
             ))}
@@ -154,11 +172,13 @@ function WidgetCard({
   editing,
   onRemove,
   onResize,
+  onNudge,
 }: {
   widget: Widget;
   editing: boolean;
   onRemove: () => void;
-  onResize: (span: 1 | 2 | 3) => void;
+  onResize: (span: 1 | 2 | 3 | 4) => void;
+  onNudge: (delta: -1 | 1) => void;
 }) {
   const { label } = WIDGETS[widget.kind];
   return (
@@ -174,11 +194,26 @@ function WidgetCard({
 
       {editing && (
         <div className="absolute inset-x-0 -top-3 flex items-center justify-center gap-1">
-          <span className="flex items-center gap-1 rounded-full border border-edge bg-sheet px-2 py-1 text-[11px] text-faint shadow-sm">
+          {/* Dragging is a mouse gesture; these move a card on a phone. */}
+          <span className="flex items-center gap-0.5 rounded-full border border-edge bg-sheet px-1 py-1 text-[11px] text-faint shadow-sm">
+            <button
+              onClick={() => onNudge(-1)}
+              aria-label={`Move ${label} back`}
+              className="flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-surface2 hover:text-fg"
+            >
+              <ChevronLeft size={13} />
+            </button>
             <GripVertical size={12} /> {label}
+            <button
+              onClick={() => onNudge(1)}
+              aria-label={`Move ${label} forward`}
+              className="flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-surface2 hover:text-fg"
+            >
+              <ChevronRight size={13} />
+            </button>
           </span>
           <span className="flex items-center gap-0.5 rounded-full border border-edge bg-sheet p-0.5 shadow-sm">
-            {([1, 2, 3] as const).map((span) => (
+            {([1, 2, 3, 4] as const).map((span) => (
               <button
                 key={span}
                 onClick={() => onResize(span)}

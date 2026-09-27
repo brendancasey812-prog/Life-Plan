@@ -119,10 +119,12 @@ function DateWidget() {
       <p className="text-sm tracking-[0.14em] text-faint uppercase">
         {now.toLocaleDateString(undefined, { weekday: "long" })}
       </p>
-      <p className="mt-1.5 text-4xl font-semibold tracking-tight">
+      {/* A single column of four is narrow; the date reads better than it
+          wraps. */}
+      <p className="mt-1.5 text-3xl font-semibold tracking-tight text-balance">
         {MONTHS[now.getMonth()]} {now.getDate()}
       </p>
-      <p className="text-2xl text-muted tabular-nums">{now.getFullYear()}</p>
+      <p className="text-xl text-muted tabular-nums">{now.getFullYear()}</p>
       <p className="mt-2.5 text-sm text-faint">Week {week + 1} of this year of your life</p>
     </div>
   );
