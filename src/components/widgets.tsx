@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   BellRing,
   Check,
+  CalendarCheck,
   CalendarDays,
   CalendarRange,
   Cake,
@@ -20,6 +21,7 @@ import { planetStyle } from "@/lib/planet";
 import { byDue, daysUntil, dueLabel, reminderTitle, type DueTone } from "@/lib/reminders";
 import { MONTHS } from "@/lib/seed";
 import { OutlineList } from "./OutlineList";
+import { WeeklyGoals } from "./WeeklyGoals";
 import { usePlan } from "@/lib/store";
 import type { NoteMeta, WidgetKind } from "@/lib/types";
 import { useGoalPage, type Scope } from "@/lib/useGoalPage";
@@ -32,6 +34,11 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
   monthGoals: { label: "Monthly goals", hint: "The month you are on", icon: CalendarDays },
   lastYearGoals: { label: "Last year", hint: "The year before that one", icon: History },
   lastMonthGoals: { label: "Last month", hint: "The month before that one", icon: History },
+  weeklyGoals: {
+    label: "Weekly goals",
+    hint: "The standing list, every week",
+    icon: CalendarCheck,
+  },
   weeks: { label: "Weeks lived", hint: "The 100-year grid, in one bar", icon: CalendarRange },
   bubbles: { label: "Life Plan", hint: "Into the decades", icon: Sparkles },
   lifeMap: { label: "Life Categories", hint: "What you build your life around", icon: Compass },
@@ -53,6 +60,8 @@ export function WidgetBody({ kind }: { kind: WidgetKind }) {
       return <GoalWidget scope="year" shift={-1} />;
     case "lastMonthGoals":
       return <GoalWidget scope="month" shift={-1} />;
+    case "weeklyGoals":
+      return <WeeklyGoals />;
     case "weeks":
       return <WeeksWidget />;
     case "bubbles":

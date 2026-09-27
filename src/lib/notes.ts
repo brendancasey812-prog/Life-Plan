@@ -9,6 +9,13 @@ export const bubbleNoteKey = (tree: TreeId, id: string) => `bubble:${tree}:${id}
 export const weekNoteKey = (age: number, week: number) => `week:${age}:${week}`;
 export const pageNoteKey = (id: string) => `page:${id}`;
 
+/**
+ * The standing weekly goals. The only page attached to nothing: one list of
+ * what every week should hold, rather than a page per week, so the Overview
+ * card and every week of the grid are looking at the same one.
+ */
+export const WEEKLY_GOALS_KEY = "weekly";
+
 export const EMPTY_NOTE: NoteBody = {
   html: "",
   text: "",

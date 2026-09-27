@@ -36,8 +36,9 @@ export function defaultWidgets(): Widget[] {
     ["lastYearGoals", 3],
     ["monthGoals", 3],
     ["lastMonthGoals", 3],
-    ["reminders", 2],
     ["date", 1],
+    ["weeklyGoals", 2],
+    ["reminders", 2],
     ["weeks", 1],
     ["bubbles", 1],
     ["lifeMap", 1],
@@ -383,7 +384,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 10,
+      version: 11,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -413,10 +414,12 @@ export const usePlan = create<PlanStore>()(
         }
 
         // The goal cards used to land side by side, offset across the rows.
-        // Put them full width and one after the other.
+        // Put them full width and one after the other. Version-gated: later
+        // releases pair each with the period before it, and this would undo
+        // that arrangement every time the plan was upgraded again.
         const yearAt = state.widgets.findIndex((w) => w.kind === "yearGoals");
         const monthAt = state.widgets.findIndex((w) => w.kind === "monthGoals");
-        if (yearAt >= 0 && monthAt >= 0) {
+        if (version < 10 && yearAt >= 0 && monthAt >= 0) {
           const widgets = state.widgets.map((w) =>
             w.kind === "yearGoals" || w.kind === "monthGoals" ? { ...w, span: 3 as const } : w,
           );
@@ -444,6 +447,21 @@ export const usePlan = create<PlanStore>()(
           const widgets = [...state.widgets];
           widgets.splice(at < 0 ? widgets.length : at + 1, 0, { id: newId("w"), kind, span: 3 });
           state.widgets = widgets;
+        }
+
+        // The standing weekly list is new. It goes beside the date card, which
+        // means moving the pair to the head of the short cards so the two of
+        // them start a row together rather than landing on separate ones.
+        if (!state.widgets.some((w) => w.kind === "weeklyGoals")) {
+          const rest = state.widgets.filter((w) => w.kind !== "date");
+          const date = state.widgets.find((w) => w.kind === "date");
+          const pair: Widget[] = [
+            { id: date?.id ?? newId("w"), kind: "date", span: 1 },
+            { id: newId("w"), kind: "weeklyGoals", span: 2 },
+          ];
+          const at = rest.findIndex((w) => w.kind === "reminders");
+          rest.splice(at < 0 ? rest.length : at, 0, ...pair);
+          state.widgets = rest;
         }
 
         // The index gained per-line content, then each line's ticked state,

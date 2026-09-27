@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ImageIcon, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  ImageIcon,
+  Maximize2,
+  NotebookPen,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useGoHome } from "@/lib/goHome";
 import { centreRadius, ringLayout } from "@/lib/layout";
 import { planetStyle } from "@/lib/planet";
@@ -10,8 +20,8 @@ import { bubbleNoteKey, deleteNotes } from "@/lib/notes";
 import { usePlan } from "@/lib/store";
 import type { Bubble, NoteMeta, TreeId } from "@/lib/types";
 import { calendarYear } from "@/lib/weeks";
+import { NoteEditor } from "./NoteEditor";
 import { NoteSheet } from "./NoteSheet";
-import { OutlineList } from "./OutlineList";
 
 /** Placeholder id for the dashed "add a bubble" circle in the ring. */
 const ADD = "__add__";
@@ -307,9 +317,10 @@ export function BubbleBoard({
       </div>
 
       {focus && (
-        <NoteBar
+        <BubbleNotes
           meta={notes[bubbleNoteKey(treeId, focus.id)]}
           noteKey={bubbleNoteKey(treeId, focus.id)}
+          label={focus.label}
           onOpen={() => setNotesOpen(true)}
         />
       )}
@@ -449,32 +460,57 @@ function IconButton({
   );
 }
 
-/** The strip under the canvas: the focused bubble's page, tickable in place. */
-function NoteBar({
+/**
+ * The panel under the canvas: the focused bubble's page, typed in place rather
+ * than only previewed. It is the same page its sheet opens — and the same one
+ * a goal tab opens when it points at this bubble — so writing here is writing
+ * there. Pictures live in the sheet, which the expand button opens.
+ */
+function BubbleNotes({
   meta,
   noteKey,
+  label,
   onOpen,
 }: {
   meta?: NoteMeta;
   noteKey: string;
+  label: string;
   onOpen: () => void;
 }) {
+  const [open, setOpen] = useState(true);
+
   return (
-    <div className="shrink-0 border-t border-edge px-4 py-3 sm:px-6">
-      <div className="flex items-center gap-3">
-        <NotebookPen size={16} className="shrink-0 text-accentink" />
-        <button onClick={onOpen} className="min-w-0 flex-1 text-left text-sm text-muted">
-          {meta?.outline?.length || meta?.excerpt
-            ? "Notes"
-            : "Add notes, screenshots and pictures…"}
-        </button>
+    <div className="shrink-0 border-t border-edge bg-surface">
+      <div className="flex items-center gap-2 px-4 py-2 sm:px-6">
+        <NotebookPen size={15} className="shrink-0 text-accentink" />
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">{label} · Notes</span>
         {!!meta?.images && (
           <span className="flex shrink-0 items-center gap-1 text-xs text-faint">
             <ImageIcon size={13} /> {meta.images}
           </span>
         )}
+        <button
+          onClick={onOpen}
+          aria-label="Open the full page"
+          title="Open the full page, with pictures"
+          className="rounded-lg p-1.5 text-muted transition hover:bg-surface2 hover:text-fg"
+        >
+          <Maximize2 size={15} />
+        </button>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Hide the notes" : "Show the notes"}
+          className="rounded-lg p-1.5 text-muted transition hover:bg-surface2 hover:text-fg"
+        >
+          {open ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+        </button>
       </div>
-      <OutlineList meta={meta} noteKey={noteKey} limit={3} size="sm" className="mt-1.5 pl-7" />
+
+      {open && (
+        <div className="flex h-56 min-h-0 flex-col border-t border-edge sm:h-64 lg:h-72">
+          <NoteEditor noteKey={noteKey} placeholder={`What is ${label} for? Write it down…`} />
+        </div>
+      )}
     </div>
   );
 }

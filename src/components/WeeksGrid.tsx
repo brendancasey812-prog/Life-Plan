@@ -9,6 +9,7 @@ import { usePlan } from "@/lib/store";
 import { WEEKS_PER_YEAR, currentCell, formatRange, weekKey } from "@/lib/weeks";
 import { NoteSheet } from "./NoteSheet";
 import { OutlineList } from "./OutlineList";
+import { WeeklyGoals } from "./WeeklyGoals";
 
 const CELL = 13;
 const GAP = 2;
@@ -123,7 +124,7 @@ export function WeeksGrid() {
         </div>
       </div>
 
-      <aside className="shrink-0 border-b border-edge px-4 py-4 sm:px-6 lg:w-80 lg:border-b-0 lg:border-l">
+      <aside className="shrink-0 space-y-4 overflow-y-auto border-b border-edge px-4 py-4 sm:px-6 lg:w-80 lg:border-b-0 lg:border-l">
         {!selected ? (
           <p className="text-sm text-faint">
             Pick any week to write down what it is for. You are in age {now.age}, week{" "}
@@ -174,6 +175,11 @@ export function WeeksGrid() {
             </button>
           </div>
         )}
+
+        {/* Not this week's — the standing list, beside whichever week is open. */}
+        <div className="border-t border-edge pt-4">
+          <WeeklyGoals size="sm" limit={8} />
+        </div>
       </aside>
 
       {selected && notesOpen && (

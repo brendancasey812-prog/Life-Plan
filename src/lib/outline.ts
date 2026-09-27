@@ -112,6 +112,19 @@ function setChecked(li: Element, checked: boolean): void {
 }
 
 /**
+ * Unticks every line on a page, for a standing list starting its week again.
+ * Returns null when there was nothing ticked to clear.
+ */
+export function clearOutlineTicks(html: string): string | null {
+  const doc = parse(html);
+  if (!doc) return null;
+  const ticked = Array.from(doc.querySelectorAll('li[data-checked="true"]'));
+  if (!ticked.length) return null;
+  for (const li of ticked) setChecked(li, false);
+  return doc.body.innerHTML;
+}
+
+/**
  * Ticks or unticks the line at `index`, returning the page's new HTML.
  *
  * A line that is not a checklist item yet becomes one, so the tick has
