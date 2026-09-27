@@ -124,7 +124,9 @@ export function Dashboard() {
             No widgets. Hit <span className="text-muted">Customise</span> to add some.
           </p>
         ) : (
-          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          // Dense, so a row that comes to three of four does not sit with a
+          // slot empty: the next card narrow enough to fit slides up into it.
+          <ul className="grid grid-flow-row-dense gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {widgets.map((w) => (
               <li
                 key={w.id}
