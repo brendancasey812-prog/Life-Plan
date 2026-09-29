@@ -99,6 +99,10 @@ interface Actions {
   openBubble: (tree: TreeId, id: string) => void;
   addBubble: (tree: TreeId, parentId: string, label: string) => string | null;
   renameBubble: (tree: TreeId, id: string, label: string) => void;
+  /** How many columns a bubble's tile takes. */
+  resizeBubble: (tree: TreeId, id: string, span: 1 | 2 | 3 | 4) => void;
+  /** Drops a bubble into the slot a sibling holds. */
+  moveBubble: (tree: TreeId, fromId: string, toId: string) => void;
   /** Deletes the bubble and its descendants, returning their note keys. */
   deleteBubble: (tree: TreeId, id: string) => string[];
   setWeekDone: (age: number, week: number, done: boolean) => void;
@@ -308,6 +312,33 @@ export const usePlan = create<PlanStore>()(
           withTree(s, treeId, {
             ...tree,
             nodes: { ...tree.nodes, [id]: { ...node, label: trimmed } },
+          }),
+        );
+      },
+
+      resizeBubble: (treeId, id, span) => {
+        const tree = get().trees[treeId];
+        const node = tree?.nodes[id];
+        if (!node) return;
+        set((s) =>
+          withTree(s, treeId, { ...tree, nodes: { ...tree.nodes, [id]: { ...node, span } } }),
+        );
+      },
+
+      moveBubble: (treeId, fromId, toId) => {
+        const tree = get().trees[treeId];
+        const from = tree?.nodes[fromId];
+        const parent = from?.parentId ? tree.nodes[from.parentId] : null;
+        if (!parent || !parent.childIds.includes(toId)) return;
+        const childIds = [...parent.childIds];
+        const at = childIds.indexOf(fromId);
+        const onto = childIds.indexOf(toId);
+        if (at < 0 || onto < 0 || at === onto) return;
+        childIds.splice(onto, 0, ...childIds.splice(at, 1));
+        set((s) =>
+          withTree(s, treeId, {
+            ...tree,
+            nodes: { ...tree.nodes, [parent.id]: { ...parent, childIds } },
           }),
         );
       },

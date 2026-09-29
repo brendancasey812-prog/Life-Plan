@@ -23,6 +23,8 @@ export interface Bubble {
   ageTo?: number;
   /** Month index 0–11, for month bubbles only. */
   month?: number;
+  /** Columns its tile takes on a wide board, out of four. Defaults to one. */
+  span?: 1 | 2 | 3 | 4;
 }
 
 export interface Tree {
