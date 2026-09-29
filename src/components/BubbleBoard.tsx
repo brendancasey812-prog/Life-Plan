@@ -29,11 +29,40 @@ import { NotesPanel } from "./NotesPanel";
  */
 const DEFAULT_SPAN = 2;
 
+/**
+ * Four columns at every width, so a size means the same thing on a phone as on
+ * a desktop: a quarter, a half, three quarters, the row. The tile's own type
+ * and padding scale instead, which is what keeps a quarter readable at 390px.
+ */
 const SPANS: Record<1 | 2 | 3 | 4, string> = {
   1: "col-span-1",
   2: "col-span-2",
-  3: "col-span-2 lg:col-span-3",
-  4: "col-span-2 sm:col-span-3 lg:col-span-4",
+  3: "col-span-3",
+  4: "col-span-4",
+};
+
+/** How tall, how big the label, by how wide the tile is. */
+const SIZING: Record<1 | 2 | 3 | 4, { box: string; label: string; sub: string }> = {
+  1: {
+    box: "min-h-[4.75rem] p-2.5 sm:min-h-[6rem] sm:p-3.5",
+    label: "text-[13px] sm:text-sm",
+    sub: "text-[10px]",
+  },
+  2: {
+    box: "min-h-[5.5rem] p-3 sm:min-h-[7rem] sm:p-4",
+    label: "text-sm sm:text-base",
+    sub: "text-[11px] sm:text-xs",
+  },
+  3: {
+    box: "min-h-[6rem] p-3.5 sm:min-h-[7.5rem] sm:p-4",
+    label: "text-base sm:text-lg",
+    sub: "text-xs",
+  },
+  4: {
+    box: "min-h-[6rem] p-3.5 sm:min-h-[8rem] sm:p-5",
+    label: "text-base sm:text-xl",
+    sub: "text-xs",
+  },
 };
 
 /** Calendar years a timeline bubble covers, or "" for everything else. */
@@ -260,7 +289,7 @@ export function BubbleBoard({
                 </div>
               )}
 
-              <ul className="grid grid-flow-row-dense grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <ul className="grid grid-flow-row-dense grid-cols-4 gap-2 sm:gap-3">
                 {children.map((node, i) => (
                   <li key={node.id} className={SPANS[node.span ?? DEFAULT_SPAN]}>
                     <Tile
@@ -302,9 +331,9 @@ export function BubbleBoard({
                 ))}
 
                 {editing && (
-                  <li className="col-span-1">
+                  <li className="col-span-2 sm:col-span-1">
                     {adding ? (
-                      <div className="flex h-full min-h-[6.5rem] items-center rounded-2xl border border-dashed border-edge2 p-3">
+                      <div className="flex h-full min-h-[4.75rem] items-center rounded-2xl border border-dashed border-edge2 p-2.5">
                         <InlineInput
                           value={draft}
                           placeholder="Name…"
@@ -322,7 +351,7 @@ export function BubbleBoard({
                           setAdding(true);
                           setDraft("");
                         }}
-                        className="flex h-full min-h-[6.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-edge2 text-sm text-faint transition hover:border-accent hover:text-fg"
+                        className="flex h-full min-h-[4.75rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-edge2 text-sm text-faint transition hover:border-accent hover:text-fg"
                       >
                         <Plus size={18} />
                         Add
@@ -413,11 +442,11 @@ function Hero({ node, hint, onOpen }: { node: Bubble; hint: string; onOpen: () =
       <button
         onClick={leave}
         style={tileStyle(node.hue)}
-        className={`door group flex w-[min(30rem,100%)] flex-col items-center gap-3 rounded-3xl px-8 py-12 text-center text-white transition-transform sm:py-16 ${
+        className={`door group flex w-[min(30rem,100%)] flex-col items-center gap-3 rounded-3xl px-6 py-10 text-center text-white transition-transform sm:px-8 sm:py-16 ${
           leaving ? "door-leaving" : "hover:-translate-y-1"
         }`}
       >
-        <span className="bubble-label text-4xl font-semibold tracking-tight sm:text-5xl">
+        <span className="bubble-label text-3xl font-semibold tracking-tight sm:text-5xl">
           {node.label}
         </span>
         <span className="bubble-label max-w-xs text-sm text-white/80">{hint}</span>
@@ -474,9 +503,9 @@ function Tile({
   onDrop: (from: string) => void;
 }) {
   const ref = useReveal(index);
+  const size = SIZING[node.span ?? DEFAULT_SPAN];
 
-  const card =
-    "group relative flex h-full w-full min-h-[6.5rem] flex-col justify-between overflow-hidden rounded-2xl p-3.5 text-left text-white transition sm:min-h-[7.5rem] sm:p-4";
+  const card = `group relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl text-left text-white transition ${size.box}`;
 
   if (renaming) {
     return (
@@ -496,8 +525,12 @@ function Tile({
     <>
       <span className="bubble-label flex items-start justify-between gap-1.5">
         <span className="min-w-0">
-          <span className="block text-base leading-snug font-medium break-words">{node.label}</span>
-          {subtitle && <span className="block text-xs text-white/70 tabular-nums">{subtitle}</span>}
+          <span className={`block leading-snug font-medium break-words ${size.label}`}>
+            {node.label}
+          </span>
+          {subtitle && (
+            <span className={`block text-white/70 tabular-nums ${size.sub}`}>{subtitle}</span>
+          )}
         </span>
         {hasNote && (
           <span
@@ -507,7 +540,7 @@ function Tile({
         )}
       </span>
       {now && (
-        <span className="mt-2 w-fit rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-accentink uppercase">
+        <span className="mt-1.5 w-fit rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.08em] text-accentink uppercase sm:mt-2 sm:px-2 sm:text-[10px]">
           Now
         </span>
       )}
@@ -550,7 +583,7 @@ function Tile({
     >
       {body}
 
-      <span className="mt-2 flex flex-wrap items-center gap-1">
+      <span className="mt-2 flex flex-wrap items-center gap-0.5 sm:gap-1">
         <TileButton label={`Move ${node.label} back`} onClick={() => onNudge(-1)}>
           <ChevronLeft size={13} />
         </TileButton>
@@ -566,7 +599,7 @@ function Tile({
             onClick={() => onResize(span)}
             aria-label={`${span} column${span > 1 ? "s" : ""}`}
             aria-pressed={(node.span ?? DEFAULT_SPAN) === span}
-            className={`h-6 w-6 rounded-full text-[11px] transition ${
+            className={`h-5 w-5 rounded-full text-[10px] transition sm:h-6 sm:w-6 sm:text-[11px] ${
               (node.span ?? DEFAULT_SPAN) === span
                 ? "bg-white/90 font-medium text-accentink"
                 : "text-white/70 hover:bg-white/20 hover:text-white"
@@ -598,7 +631,7 @@ function TileButton({
     <button
       aria-label={label}
       onClick={onClick}
-      className={`flex h-6 w-6 items-center justify-center rounded-full text-white/70 transition ${
+      className={`flex h-5 w-5 items-center justify-center rounded-full text-white/70 transition sm:h-6 sm:w-6 ${
         danger ? "hover:bg-white/25 hover:text-white" : "hover:bg-white/20 hover:text-white"
       }`}
     >
