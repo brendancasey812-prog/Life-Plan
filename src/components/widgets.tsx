@@ -241,17 +241,19 @@ function LifeMapWidget() {
     .map((id) => tree.nodes[id])
     .filter(Boolean);
   return (
-    <Link href="/map" className="flex h-full flex-col">
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-base font-medium">Life Categories</h3>
+    <div className="flex h-full flex-col">
+      <Link href="/map" className="flex items-baseline justify-between gap-2">
+        <span className="text-base font-medium">Life Categories</span>
         <ArrowUpRight size={17} className="shrink-0 text-faint" />
-      </div>
-      {/* One to a line: wrapped, they ran together and read as one block. */}
+      </Link>
+      {/* One to a line: wrapped, they ran together and read as one block. Each
+          opens its own bubble rather than the tab it sits on. */}
       <div className="mt-3 flex flex-col items-start gap-1.5">
         {areas.map((a) => (
-          <span
+          <Link
             key={a.id}
-            className="max-w-full truncate rounded-full px-3 py-1.5 text-sm leading-tight"
+            href={`/map#${a.id}`}
+            className="max-w-full truncate rounded-full px-3 py-1.5 text-sm leading-tight transition hover:brightness-105"
             style={{
               background: `hsl(${a.hue} var(--b-on-s) var(--b-on-l1) / 0.22)`,
               boxShadow: `inset 0 0 0 1px hsl(${a.hue} var(--b-on-s) var(--b-on-l1) / 0.35)`,
@@ -259,10 +261,10 @@ function LifeMapWidget() {
             }}
           >
             {a.label}
-          </span>
+          </Link>
         ))}
       </div>
-    </Link>
+    </div>
   );
 }
 

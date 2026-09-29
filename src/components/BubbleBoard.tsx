@@ -108,6 +108,19 @@ export function BubbleBoard({
     [openBubble, treeId],
   );
 
+  // A link can name a bubble to open — `/map#<id>` from the Overview card —
+  // so a category on the board opens on that category rather than the tab's
+  // own home. Read on arrival and again if the link is followed from here.
+  useEffect(() => {
+    const follow = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (id && tree.nodes[id]) open(id);
+    };
+    follow();
+    window.addEventListener("hashchange", follow);
+    return () => window.removeEventListener("hashchange", follow);
+  }, [tree, open]);
+
   const trail = useMemo(() => {
     const path: Bubble[] = [];
     let cur = focus;
