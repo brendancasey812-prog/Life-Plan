@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { findTimeline, todayKey, type PeriodKey, type Scope } from "./goals";
+import { goalNoteKey } from "./house";
 import { byDue, reminderNoteKey } from "./reminders";
 import {
   WEEKLY_GOALS_KEY,
@@ -18,6 +19,9 @@ import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
 import type {
   Bubble,
   Focus,
+  HousePlan,
+  LifeGoal,
+  Listing,
   NoteMeta,
   Page,
   PlanState,
@@ -37,6 +41,36 @@ const DEFAULT_SETTINGS: Settings = {
   lifespan: 100,
 };
 
+/**
+ * The house budget starts from the figures the plan was sketched with: what
+ * is in the fund, what goes in a year, and what it earns. The cost of a house
+ * is nobody's guess but the buyer's, so it starts empty.
+ */
+function defaultHouse(): HousePlan {
+  return {
+    cost: 0,
+    depositPct: 20,
+    startBalance: 40000,
+    rate: 6,
+    contribution: 24000,
+    contributions: {},
+    listings: [],
+  };
+}
+
+function defaultGoals(): LifeGoal[] {
+  return [
+    {
+      id: newId("g"),
+      title: "A home by 30",
+      targetAge: 30,
+      done: false,
+      plan: "house",
+      createdAt: Date.now(),
+    },
+  ];
+}
+
 /** What the entry tab starts as: age first, then the rest of the plan. */
 export function defaultWidgets(): Widget[] {
   const kinds: [WidgetKind, 1 | 2 | 3 | 4][] = [
@@ -50,6 +84,7 @@ export function defaultWidgets(): Widget[] {
     ["reminders", 2],
     ["weeks", 1],
     ["weeklyGoals", 2],
+    ["lifeGoals", 2],
     ["bubbles", 1],
     ["lifeMap", 1],
     ["recentNotes", 1],
@@ -72,6 +107,15 @@ interface Actions {
    * tabs and the bubbles are looking at exactly the same page.
    */
   resolveTimeline: (age: number, month?: number) => void;
+  addGoal: (title: string, targetAge: number) => string;
+  updateGoal: (id: string, patch: Partial<Omit<LifeGoal, "id" | "createdAt">>) => void;
+  deleteGoal: (id: string) => void;
+  updateHouse: (patch: Partial<Omit<HousePlan, "listings" | "contributions">>) => void;
+  /** What goes into the fund in one year; clearing it falls back to the rest. */
+  setContribution: (age: number, amount: number | null) => void;
+  addListing: () => string;
+  updateListing: (id: string, patch: Partial<Omit<Listing, "id">>) => void;
+  deleteListing: (id: string) => void;
   addPage: (title: string) => string;
   addReminder: (title: string) => string;
   updateReminder: (id: string, patch: Partial<Omit<Reminder, "id" | "createdAt">>) => void;
@@ -122,6 +166,8 @@ function emptyState(): PlanState {
     reminders: [],
     notes: {},
     widgets: defaultWidgets(),
+    goals: defaultGoals(),
+    house: defaultHouse(),
   };
 }
 
@@ -322,6 +368,65 @@ export const usePlan = create<PlanStore>()(
         get().openBubble("life", withYear.yearId);
       },
 
+      addGoal: (title, targetAge) => {
+        const goal: LifeGoal = {
+          id: newId("g"),
+          title,
+          targetAge,
+          done: false,
+          createdAt: Date.now(),
+        };
+        set((s) => ({ goals: [...s.goals, goal].sort(byTargetAge) }));
+        return goal.id;
+      },
+
+      updateGoal: (id, patch) =>
+        set((s) => ({
+          goals: s.goals.map((g) => (g.id === id ? { ...g, ...patch } : g)).sort(byTargetAge),
+        })),
+
+      deleteGoal: (id) =>
+        set((s) => ({
+          goals: s.goals.filter((g) => g.id !== id),
+          notes: withoutKeys(s.notes, [goalNoteKey(id)]),
+        })),
+
+      updateHouse: (patch) => set((s) => ({ house: { ...s.house, ...patch } })),
+
+      setContribution: (age, amount) =>
+        set((s) => {
+          const contributions = { ...s.house.contributions };
+          if (amount === null) delete contributions[String(age)];
+          else contributions[String(age)] = amount;
+          return { house: { ...s.house, contributions } };
+        }),
+
+      addListing: () => {
+        const listing: Listing = {
+          id: newId("h"),
+          address: "",
+          city: "",
+          state: "",
+          link: "",
+          notes: "",
+        };
+        set((s) => ({ house: { ...s.house, listings: [...s.house.listings, listing] } }));
+        return listing.id;
+      },
+
+      updateListing: (id, patch) =>
+        set((s) => ({
+          house: {
+            ...s.house,
+            listings: s.house.listings.map((l) => (l.id === id ? { ...l, ...patch } : l)),
+          },
+        })),
+
+      deleteListing: (id) =>
+        set((s) => ({
+          house: { ...s.house, listings: s.house.listings.filter((l) => l.id !== id) },
+        })),
+
       addPage: (title) => {
         const page: Page = { id: newId("p"), title, createdAt: Date.now() };
         set((s) => ({ pages: [page, ...s.pages] }));
@@ -407,7 +512,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 13,
+      version: 14,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -417,6 +522,8 @@ export const usePlan = create<PlanStore>()(
         reminders: s.reminders,
         notes: s.notes,
         widgets: s.widgets,
+        goals: s.goals,
+        house: s.house,
       }),
       migrate: async (persisted, version) => {
         const state = persisted as PlanState;
@@ -540,6 +647,21 @@ export const usePlan = create<PlanStore>()(
           }
         }
 
+        // Life goals and the house budget are new; a plan from before them
+        // starts with the home, since that is the one it was built for.
+        state.goals ??= defaultGoals();
+        state.house = { ...defaultHouse(), ...state.house };
+        if (!state.widgets.some((w) => w.kind === "lifeGoals")) {
+          const widgets = [...state.widgets];
+          const at = widgets.findIndex((w) => w.kind === "weeklyGoals");
+          widgets.splice(at < 0 ? widgets.length : at + 1, 0, {
+            id: newId("w"),
+            kind: "lifeGoals",
+            span: 2,
+          });
+          state.widgets = widgets;
+        }
+
         // The index gained per-line content, then each line's ticked state,
         // then whether each line can carry a box at all. Rebuild every meta
         // from its body so pages written before any of that show their goals
@@ -609,6 +731,12 @@ export const usePlan = create<PlanStore>()(
   ),
 );
 
+/** Soonest first, then anything already true. */
+export function byTargetAge(a: LifeGoal, b: LifeGoal): number {
+  if (a.done !== b.done) return a.done ? 1 : -1;
+  return a.targetAge - b.targetAge || a.createdAt - b.createdAt;
+}
+
 export function pageTitle(title: string): string {
   return title.trim() || "Untitled page";
 }
@@ -624,6 +752,8 @@ export function exportable(s: PlanState): PlanState {
     reminders: s.reminders,
     notes: s.notes,
     widgets: s.widgets,
+    goals: s.goals,
+    house: s.house,
   };
 }
 
@@ -641,6 +771,8 @@ export function parsePlan(text: string): (PlanState & { noteBodies?: unknown }) 
       reminders: data.reminders ?? [],
       notes: data.notes ?? {},
       widgets: data.widgets?.length ? data.widgets : defaultWidgets(),
+      goals: data.goals ?? defaultGoals(),
+      house: { ...defaultHouse(), ...data.house },
       noteBodies: data.noteBodies,
     };
   } catch {

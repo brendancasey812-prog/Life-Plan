@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowUpRight,
   ChevronDown,
   ChevronLeft,
   ChevronUp,
   ImageIcon,
+  Flag,
   Maximize2,
   NotebookPen,
   Pencil,
@@ -65,6 +68,7 @@ export function BubbleBoard({
   const renameBubble = usePlan((s) => s.renameBubble);
   const deleteBubble = usePlan((s) => s.deleteBubble);
   const notes = usePlan((s) => s.notes);
+  const lifeGoals = usePlan((s) => s.goals);
 
   // One reading of the clock for the whole board, so every level agrees on
   // which bubble is now.
@@ -163,6 +167,16 @@ export function BubbleBoard({
   }
 
   const deleting = pendingDelete ? tree.nodes[pendingDelete] : null;
+
+  // A goal belongs to the ages its bubble covers, so `A home by 30` shows on
+  // the 30 bubble and on the decade holding it.
+  const aimedHere = useMemo(() => {
+    if (treeId !== "life" || !focus || focus.ageFrom === undefined) return [];
+    const to = focus.ageTo ?? focus.ageFrom;
+    // A month bubble is a slice of its year, not an age of its own.
+    if (focus.month !== undefined) return [];
+    return lifeGoals.filter((g) => g.targetAge >= focus.ageFrom! && g.targetAge <= to);
+  }, [treeId, focus, lifeGoals]);
 
   return (
     <div className="flex h-full flex-col">
@@ -337,6 +351,26 @@ export function BubbleBoard({
           </div>
         )}
       </div>
+
+      {focus && aimedHere.length > 0 && (
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-edge px-4 py-2 sm:px-6">
+          <span className="flex items-center gap-1.5 text-xs font-medium tracking-[0.14em] text-accentink uppercase">
+            <Flag size={13} /> Life {aimedHere.length === 1 ? "goal" : "goals"}
+          </span>
+          {aimedHere.map((goal) => (
+            <Link
+              key={goal.id}
+              href={goal.plan === "house" ? "/house" : "/goals"}
+              className={`flex items-center gap-1 rounded-full border border-edge bg-surface px-3 py-1 text-sm transition hover:bg-surface2 hover:text-fg ${
+                goal.done ? "text-faint line-through" : "text-muted"
+              }`}
+            >
+              {goal.title || "Untitled goal"}
+              <ArrowUpRight size={13} className="text-faint" />
+            </Link>
+          ))}
+        </div>
+      )}
 
       {focus && (
         <BubbleNotes

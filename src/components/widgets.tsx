@@ -11,6 +11,7 @@ import {
   CalendarRange,
   Cake,
   Compass,
+  Flag,
   History,
   ImageIcon,
   NotebookPen,
@@ -18,14 +19,15 @@ import {
   Target,
 } from "lucide-react";
 import { planetStyle } from "@/lib/planet";
+import { goalNoteKey } from "@/lib/house";
 import { byDue, daysUntil, dueLabel, reminderTitle, type DueTone } from "@/lib/reminders";
 import { MONTHS } from "@/lib/seed";
 import { OutlineList } from "./OutlineList";
 import { WeeklyGoals } from "./WeeklyGoals";
-import { usePlan } from "@/lib/store";
+import { byTargetAge, usePlan } from "@/lib/store";
 import type { NoteMeta, WidgetKind } from "@/lib/types";
 import { useGoalPage, type Scope } from "@/lib/useGoalPage";
-import { WEEKS_PER_YEAR, currentCell, weeksLived } from "@/lib/weeks";
+import { WEEKS_PER_YEAR, calendarYear, currentCell, weeksLived } from "@/lib/weeks";
 
 export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: typeof Cake }> = {
   age: { label: "Age", hint: "How far through the year you are", icon: Cake },
@@ -39,6 +41,7 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
     hint: "The standing list, every week",
     icon: CalendarCheck,
   },
+  lifeGoals: { label: "Life goals", hint: "What should be true by when", icon: Flag },
   weeks: { label: "Weeks lived", hint: "The 100-year grid, in one bar", icon: CalendarRange },
   bubbles: { label: "Life Plan", hint: "Into the decades", icon: Sparkles },
   lifeMap: { label: "Life Categories", hint: "What you build your life around", icon: Compass },
@@ -62,6 +65,8 @@ export function WidgetBody({ kind }: { kind: WidgetKind }) {
       return <GoalWidget scope="month" shift={-1} />;
     case "weeklyGoals":
       return <WeeklyGoals />;
+    case "lifeGoals":
+      return <LifeGoalsWidget />;
     case "weeks":
       return <WeeksWidget />;
     case "bubbles":
@@ -279,6 +284,63 @@ function RecentNotesWidget() {
             <OutlineList key={key} meta={meta} noteKey={key} limit={3} size="sm" />
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+/** The long horizon: what should be true by when, soonest first. */
+function LifeGoalsWidget() {
+  const goals = usePlan((s) => s.goals);
+  const notes = usePlan((s) => s.notes);
+  const birthDate = usePlan((s) => s.settings.birthDate);
+  const updateGoal = usePlan((s) => s.updateGoal);
+  const ageNow = new Date().getFullYear() - calendarYear(birthDate, 0);
+  const shown = useMemo(() => [...goals].sort(byTargetAge).slice(0, 4), [goals]);
+
+  return (
+    <div className="flex h-full flex-col">
+      <Link href="/goals" className="flex items-baseline justify-between gap-2">
+        <span className="text-base font-medium">Life goals</span>
+        <ArrowUpRight size={17} className="shrink-0 text-faint" />
+      </Link>
+
+      {shown.length === 0 ? (
+        <p className="mt-3 text-base text-faint">Nothing set yet.</p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {shown.map((goal) => {
+            const away = goal.targetAge - ageNow;
+            return (
+              <li key={goal.id} className="flex items-start gap-2.5">
+                <button
+                  onClick={() => updateGoal(goal.id, { done: !goal.done })}
+                  aria-pressed={goal.done}
+                  aria-label={`${goal.done ? "Untick" : "Tick"} ${goal.title || "this goal"}`}
+                  className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border transition ${
+                    goal.done
+                      ? "border-transparent bg-done text-white"
+                      : "border-edge2 text-transparent hover:border-accent"
+                  }`}
+                >
+                  <Check size={12} />
+                </button>
+                <Link
+                  href={goal.plan === "house" ? "/house" : "/goals"}
+                  className={`min-w-0 flex-1 truncate text-base ${
+                    goal.done ? "text-faint line-through" : "text-muted"
+                  }`}
+                >
+                  {goal.title || "Untitled goal"}
+                  {notes[goalNoteKey(goal.id)] && <span className="text-faint"> ·</span>}
+                </Link>
+                <span className="shrink-0 text-sm text-faint tabular-nums">
+                  {away > 0 ? `${away}y` : away === 0 ? "now" : "—"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );

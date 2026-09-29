@@ -76,6 +76,7 @@ export type WidgetKind =
   | "lastYearGoals"
   | "lastMonthGoals"
   | "weeklyGoals"
+  | "lifeGoals"
   | "bubbles"
   | "weeks"
   | "lifeMap"
@@ -87,6 +88,49 @@ export interface Widget {
   kind: WidgetKind;
   /** Columns it takes on a wide screen, out of four. */
   span: 1 | 2 | 3 | 4;
+}
+
+/**
+ * Something to be true by a given age — the long horizon the timeline is for.
+ * A goal with a `plan` also has a tab of its own working the numbers out.
+ */
+export interface LifeGoal {
+  id: string;
+  title: string;
+  /** The age it should be true by; it shows on that bubble of the timeline. */
+  targetAge: number;
+  done: boolean;
+  /** The planning tab behind it, where there is one. */
+  plan?: "house";
+  createdAt: number;
+}
+
+/** A house someone has found and wants to keep track of. */
+export interface Listing {
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  link: string;
+  notes: string;
+}
+
+/**
+ * The house budget: what it costs, what has to be saved, and what the fund
+ * does between now and the year it is needed. Every figure here is the user's
+ * to change — the rest is worked out from them.
+ */
+export interface HousePlan {
+  /** What the house costs, and the deposit as a percentage of it. */
+  cost: number;
+  depositPct: number;
+  /** What is in the fund today, and what it earns a year, as a percentage. */
+  startBalance: number;
+  rate: number;
+  /** Put away each year, and any year that differs, keyed by age. */
+  contribution: number;
+  contributions: Record<string, number>;
+  listings: Listing[];
 }
 
 /** Something to do, with a page of its own behind it. */
@@ -135,6 +179,9 @@ export interface PlanState {
   notes: Record<string, NoteMeta>;
   /** The entry tab's layout, in the order the cards appear. */
   widgets: Widget[];
+  /** The long horizon: what should be true by when. */
+  goals: LifeGoal[];
+  house: HousePlan;
 }
 
 /** A plan plus every note body, as written by Export and read by Import. */
