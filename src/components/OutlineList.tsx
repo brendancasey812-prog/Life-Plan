@@ -31,6 +31,7 @@ export function OutlineList({
 }) {
   const setNoteMeta = usePlan((s) => s.setNoteMeta);
   const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const items = meta?.outline?.length
     ? meta.outline
@@ -69,7 +70,7 @@ export function OutlineList({
 
   return (
     <ul className={`${size === "sm" ? "space-y-1" : "space-y-1.5"} ${className}`}>
-      {items.slice(0, limit).map((item, i) => (
+      {(expanded ? items : items.slice(0, limit)).map((item, i) => (
         <li key={i} className={`flex items-start gap-2.5 ${text}`}>
           {canCheck(item) ? (
             <button
@@ -97,7 +98,7 @@ export function OutlineList({
             <span aria-hidden className={`${box} shrink-0`} />
           )}
           <span
-            className={`min-w-0 flex-1 truncate ${
+            className={`min-w-0 flex-1 ${expanded ? "break-words" : "truncate"} ${
               item.done
                 ? "text-faint line-through"
                 : canCheck(item)
@@ -110,8 +111,18 @@ export function OutlineList({
         </li>
       ))}
       {items.length > limit && (
-        <li className={`pl-[28px] text-faint ${size === "sm" ? "text-xs" : "text-sm"}`}>
-          +{items.length - limit} more
+        <li className={`pl-[28px] ${size === "sm" ? "text-xs" : "text-sm"}`}>
+          {/* These sit inside cards that are themselves links. */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+            className="text-faint transition hover:text-fg"
+          >
+            {expanded ? "Show less" : `+${items.length - limit} more`}
+          </button>
         </li>
       )}
     </ul>

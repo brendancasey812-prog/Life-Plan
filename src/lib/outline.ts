@@ -10,7 +10,7 @@ export interface OutlineItem {
 }
 
 /** How many lines of a page the index keeps, and how long each may be. */
-const MAX_ITEMS = 12;
+const MAX_ITEMS = 20;
 const MAX_TEXT = 120;
 
 /** Blocks that can hold a goal, and blocks that are structure around one. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -246,11 +246,12 @@ function LifeMapWidget() {
         <h3 className="text-base font-medium">Life Categories</h3>
         <ArrowUpRight size={17} className="shrink-0 text-faint" />
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
+      {/* One to a line: wrapped, they ran together and read as one block. */}
+      <div className="mt-3 flex flex-col items-start gap-1.5">
         {areas.map((a) => (
           <span
             key={a.id}
-            className="rounded-full px-3 py-1.5 text-sm"
+            className="max-w-full truncate rounded-full px-3 py-1.5 text-sm leading-tight"
             style={{
               background: `hsl(${a.hue} var(--b-on-s) var(--b-on-l1) / 0.22)`,
               boxShadow: `inset 0 0 0 1px hsl(${a.hue} var(--b-on-s) var(--b-on-l1) / 0.35)`,
@@ -296,7 +297,9 @@ function LifeGoalsWidget() {
   const birthDate = usePlan((s) => s.settings.birthDate);
   const updateGoal = usePlan((s) => s.updateGoal);
   const ageNow = new Date().getFullYear() - calendarYear(birthDate, 0);
-  const shown = useMemo(() => [...goals].sort(byTargetAge).slice(0, 4), [goals]);
+  const [expanded, setExpanded] = useState(false);
+  const sorted = useMemo(() => [...goals].sort(byTargetAge), [goals]);
+  const shown = expanded ? sorted : sorted.slice(0, 4);
 
   return (
     <div className="flex h-full flex-col">
@@ -342,6 +345,15 @@ function LifeGoalsWidget() {
           })}
         </ul>
       )}
+
+      {sorted.length > 4 && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 self-start text-sm text-faint transition hover:text-fg"
+        >
+          {expanded ? "Show less" : `+${sorted.length - 4} more`}
+        </button>
+      )}
     </div>
   );
 }
@@ -350,14 +362,9 @@ function LifeGoalsWidget() {
 function RemindersWidget() {
   const reminders = usePlan((s) => s.reminders);
   const updateReminder = usePlan((s) => s.updateReminder);
-  const due = useMemo(
-    () =>
-      [...reminders]
-        .filter((r) => !r.done)
-        .sort(byDue)
-        .slice(0, 4),
-    [reminders],
-  );
+  const [expanded, setExpanded] = useState(false);
+  const outstanding = useMemo(() => [...reminders].filter((r) => !r.done).sort(byDue), [reminders]);
+  const due = expanded ? outstanding : outstanding.slice(0, 4);
   const overdue = reminders.filter((r) => !r.done && (daysUntil(r.due) ?? 1) < 0).length;
 
   return (
@@ -391,6 +398,15 @@ function RemindersWidget() {
             );
           })}
         </ul>
+      )}
+
+      {outstanding.length > 4 && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 self-start text-sm text-faint transition hover:text-fg"
+        >
+          {expanded ? "Show less" : `+${outstanding.length - 4} more`}
+        </button>
       )}
 
       {overdue > 0 && <p className="mt-auto pt-3 text-sm text-dangerink">{overdue} overdue</p>}

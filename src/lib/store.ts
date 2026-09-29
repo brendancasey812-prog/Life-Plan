@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS: Settings = {
   name: "",
   birthDate: "2001-01-01",
   lifespan: 100,
+  hiddenTabs: [],
 };
 
 /**
@@ -512,7 +513,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 14,
+      version: 15,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -663,10 +664,11 @@ export const usePlan = create<PlanStore>()(
         }
 
         // The index gained per-line content, then each line's ticked state,
-        // then whether each line can carry a box at all. Rebuild every meta
+        // then whether each line can carry a box at all, and later room for
+        // more lines of a page than a card shows at once. Rebuild every meta
         // from its body so pages written before any of that show their goals
-        // stacked, and tickable, without being reopened.
-        if (version < 9) {
+        // stacked, tickable, and whole when a card is expanded.
+        if (version < 15) {
           try {
             const bodies = await allNotes();
             const notes = { ...(state.notes ?? {}) };

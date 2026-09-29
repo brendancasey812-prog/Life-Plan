@@ -156,6 +156,8 @@ export interface Settings {
   birthDate: string;
   /** Highest age the timeline and week grid run to. */
   lifespan: number;
+  /** Tabs taken off the bar, by route. Everything else is shown. */
+  hiddenTabs?: string[];
 }
 
 /**

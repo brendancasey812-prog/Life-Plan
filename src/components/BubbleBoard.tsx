@@ -568,7 +568,9 @@ function BubbleNotes({
   label: string;
   onOpen: () => void;
 }) {
-  const [open, setOpen] = useState(true);
+  // Closed to begin with: the canvas is what the tab is for, and the panel is
+  // one click away when there is something to write.
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="shrink-0 border-t border-edge bg-surface">
