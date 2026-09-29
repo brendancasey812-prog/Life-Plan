@@ -158,6 +158,8 @@ export interface Settings {
   lifespan: number;
   /** Tabs taken off the bar, by route. Everything else is shown. */
   hiddenTabs?: string[];
+  /** The order they sit in. A tab not listed keeps its place at the end. */
+  tabOrder?: string[];
 }
 
 /**

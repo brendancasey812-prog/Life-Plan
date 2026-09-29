@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS: Settings = {
   birthDate: "2001-01-01",
   lifespan: 100,
   hiddenTabs: [],
+  tabOrder: [],
 };
 
 /**

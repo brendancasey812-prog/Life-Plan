@@ -45,6 +45,9 @@
   --done: light-dark(#5c8058, #87ab81);
 
   /* Week grid cells. */
+  /* A week marked done. Blue rather than the green a tick uses, so a finished
+     week reads apart from a goal ticked off inside one. */
+  --cell-done: light-dark(#8cb4d8, #6f9cc4);
   --cell: light-dark(rgb(35 39 46 / 0.055), rgb(226 232 240 / 0.05));
   --cell-past: light-dark(rgb(35 39 46 / 0.2), rgb(226 232 240 / 0.22));
   --cell-hover: light-dark(rgb(35 39 46 / 0.36), rgb(226 232 240 / 0.4));
@@ -134,6 +137,7 @@
   --color-dangersoft: var(--danger-soft);
   --color-dangerink: var(--danger-ink);
   --color-done: var(--done);
+  --color-celldone: var(--cell-done);
   --color-cell: var(--cell);
   --color-cellpast: var(--cell-past);
   --color-cellhover: var(--cell-hover);
