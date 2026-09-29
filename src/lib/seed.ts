@@ -35,10 +35,31 @@ export function makeBubble(b: Partial<Bubble> & { label: string }): Bubble {
   };
 }
 
-/** Spread children evenly around the colour wheel, anchored on the parent. */
+/**
+ * The band the plan is coloured from: green through teal into blue. Every hue
+ * in the app walks this rather than the whole wheel, so a board of a dozen
+ * tiles reads as one set of colours instead of a rainbow.
+ */
+export const HUE_FROM = 148;
+export const HUE_TO = 244;
+const HUE_SPAN = HUE_TO - HUE_FROM;
+
+/** Wraps any offset back into the band. */
+function inBand(offset: number): number {
+  return Math.round(HUE_FROM + (((offset % HUE_SPAN) + HUE_SPAN) % HUE_SPAN));
+}
+
+/** Spread children evenly along the band, anchored on the parent. */
 export function childHue(parentHue: number, index: number, count: number): number {
-  const spread = count <= 1 ? 0 : 300 * (index / count);
-  return Math.round((parentHue + 30 + spread) % 360);
+  const step = count <= 1 ? 0 : HUE_SPAN * (index / count);
+  return inBand(parentHue - HUE_FROM + 26 + step);
+}
+
+/** The next colour along for a bubble the user adds themselves. */
+export function nextHue(parentHue: number, index: number): number {
+  // A step that does not divide the band, so siblings stay distinct however
+  // many are added later.
+  return inBand(parentHue - HUE_FROM + 37 + index * 43);
 }
 
 /** Tab 1: a single "Life Plan" planet; decades, years and months grow from it. */
@@ -63,7 +84,7 @@ const MAP: [string, string[]][] = [
 ];
 
 export function seedMapTree(): Tree {
-  const root = makeBubble({ id: "map_root", label: "Life Categories", hue: 275, seeded: true });
+  const root = makeBubble({ id: "map_root", label: "Life Categories", hue: 168, seeded: true });
   const nodes: Record<string, Bubble> = { [root.id]: root };
 
   MAP.forEach(([area, subs], i) => {

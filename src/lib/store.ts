@@ -15,7 +15,7 @@ import {
   weekNoteKey,
   writeNote,
 } from "./notes";
-import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
+import { MONTHS, childHue, makeBubble, newId, nextHue, seedTrees } from "./seed";
 import type {
   Bubble,
   Focus,
@@ -287,9 +287,7 @@ export const usePlan = create<PlanStore>()(
           id: newId(),
           label: trimmed,
           parentId,
-          // Offset by a non-multiple of the wheel so siblings stay distinct
-          // however many get added later.
-          hue: Math.round((parent.hue + 40 + index * 47) % 360),
+          hue: nextHue(parent.hue, index),
           seeded: true,
         });
         set((s) =>
@@ -558,7 +556,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 15,
+      version: 16,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -706,6 +704,30 @@ export const usePlan = create<PlanStore>()(
             span: 2,
           });
           state.widgets = widgets;
+        }
+
+        // The colours were spread around the whole wheel, which made a board
+        // of a dozen tiles a rainbow. They walk a green-to-blue band now, and
+        // a plan's bubbles are recoloured to it — hue is generated, never
+        // chosen, so nothing of the user's is lost by redoing it.
+        if (version < 16) {
+          for (const treeId of ["life", "map"] as TreeId[]) {
+            const tree = state.trees?.[treeId];
+            const root = tree?.nodes[tree.rootId];
+            if (!tree || !root) continue;
+            root.hue = treeId === "life" ? 205 : 168;
+            const queue = [root.id];
+            while (queue.length) {
+              const node = tree.nodes[queue.shift()!];
+              if (!node) continue;
+              node.childIds.forEach((id, i) => {
+                const kid = tree.nodes[id];
+                if (!kid) return;
+                kid.hue = childHue(node.hue, i, node.childIds.length);
+                queue.push(id);
+              });
+            }
+          }
         }
 
         // The index gained per-line content, then each line's ticked state,
