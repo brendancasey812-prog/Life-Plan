@@ -49,6 +49,42 @@ export async function updateNote(key: string, patch: Partial<NoteBody>): Promise
   return next;
 }
 
+/**
+ * Adds lines to a page as unticked checklist items, skipping any the page
+ * already carries. They join the page's last checklist if it has one, so a
+ * list that is added to stays one list.
+ */
+export async function appendTasks(key: string, lines: string[]): Promise<NoteBody | null> {
+  const current = (await readNote(key)) ?? EMPTY_NOTE;
+  const have = current.text.toLowerCase();
+  const missing = lines.filter((line) => !have.includes(line.toLowerCase()));
+  if (!missing.length) return null;
+
+  const items = missing
+    .map(
+      (line) =>
+        `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>${line}</p></div></li>`,
+    )
+    .join("");
+
+  let html: string;
+  const doc =
+    typeof DOMParser === "undefined"
+      ? null
+      : new DOMParser().parseFromString(current.html, "text/html");
+  const lists = doc?.querySelectorAll('ul[data-type="taskList"]');
+  const last = lists?.length ? lists[lists.length - 1] : null;
+  if (doc && last) {
+    last.insertAdjacentHTML("beforeend", items);
+    html = doc.body.innerHTML;
+  } else {
+    html = `${current.html}<ul data-type="taskList">${items}</ul>`;
+  }
+
+  const text = [current.text.trimEnd(), ...missing].filter(Boolean).join("\n");
+  return updateNote(key, { html, text });
+}
+
 export function deleteNotes(keys: string[]): Promise<void> {
   return idbDelete(keys);
 }

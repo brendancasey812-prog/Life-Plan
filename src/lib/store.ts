@@ -4,7 +4,16 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { findTimeline, todayKey, type PeriodKey, type Scope } from "./goals";
 import { byDue, reminderNoteKey } from "./reminders";
-import { allNotes, bubbleNoteKey, excerptOf, metaOf, weekNoteKey, writeNote } from "./notes";
+import {
+  WEEKLY_GOALS_KEY,
+  allNotes,
+  appendTasks,
+  bubbleNoteKey,
+  excerptOf,
+  metaOf,
+  weekNoteKey,
+  writeNote,
+} from "./notes";
 import { MONTHS, childHue, makeBubble, newId, seedTrees } from "./seed";
 import type {
   Bubble,
@@ -398,7 +407,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 12,
+      version: 13,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -511,6 +520,24 @@ export const usePlan = create<PlanStore>()(
             .sort((a, b) => rank(a.w, a.i) - rank(b.w, b.i))
             .map(({ w }) => w);
           state.widgets = [...full, ...short];
+        }
+
+        // Asked for: the standing week should carry the body as well as the
+        // work. Added once, and only the lines the list does not already have,
+        // so anything written there is left as it is.
+        if (version < 13) {
+          try {
+            const body = await appendTasks(WEEKLY_GOALS_KEY, [
+              "Physical activity",
+              "Self-care stretching",
+              "Yoga mat",
+              "Acupressure",
+            ]);
+            const meta = body && metaOf(body);
+            if (meta) state.notes = { ...(state.notes ?? {}), [WEEKLY_GOALS_KEY]: meta };
+          } catch {
+            // No IndexedDB to write to; the list stays as it was.
+          }
         }
 
         // The index gained per-line content, then each line's ticked state,
