@@ -103,6 +103,8 @@ interface Actions {
   resizeBubble: (tree: TreeId, id: string, span: 1 | 2 | 3 | 4) => void;
   /** Drops a bubble into the slot a sibling holds. */
   moveBubble: (tree: TreeId, fromId: string, toId: string) => void;
+  /** Sets every bubble under a parent to the same width. */
+  resizeChildren: (tree: TreeId, parentId: string, span: 1 | 2 | 3 | 4) => void;
   /** Deletes the bubble and its descendants, returning their note keys. */
   deleteBubble: (tree: TreeId, id: string) => string[];
   setWeekDone: (age: number, week: number, done: boolean) => void;
@@ -323,6 +325,17 @@ export const usePlan = create<PlanStore>()(
         set((s) =>
           withTree(s, treeId, { ...tree, nodes: { ...tree.nodes, [id]: { ...node, span } } }),
         );
+      },
+
+      resizeChildren: (treeId, parentId, span) => {
+        const tree = get().trees[treeId];
+        const parent = tree?.nodes[parentId];
+        if (!parent) return;
+        const nodes = { ...tree.nodes };
+        for (const id of parent.childIds) {
+          if (nodes[id]) nodes[id] = { ...nodes[id], span };
+        }
+        set((s) => withTree(s, treeId, { ...tree, nodes }));
       },
 
       moveBubble: (treeId, fromId, toId) => {

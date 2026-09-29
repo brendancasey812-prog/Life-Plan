@@ -379,3 +379,27 @@ textarea {
     transition: border-color 0.2s ease;
   }
 }
+
+/* The front door leaves downward: it is a way through, so it gets out of the
+   way rather than fading where it stands. */
+.door {
+  transition:
+    transform 0.26s cubic-bezier(0.4, 0, 0.7, 0.2),
+    opacity 0.26s ease;
+}
+
+.door-leaving {
+  transform: translateY(28px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door {
+    transition: opacity 0.15s ease;
+  }
+
+  .door-leaving {
+    transform: none;
+  }
+}

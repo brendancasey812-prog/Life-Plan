@@ -49,3 +49,26 @@ export function planetStyle(hue: number, radius: number, dim = false): CSSProper
     ].join(", "),
   };
 }
+
+/**
+ * The same colour as a planet, laid into a card. No coloured border: the whole
+ * tile carries the hue, with a sheen off the top-left corner for a little
+ * depth and a soft lift so it sits above the board rather than in it. The
+ * labels on top are white, which is what `hueDrop` is protecting.
+ */
+export function tileStyle(hue: number): CSSProperties {
+  const d = hueDrop(hue);
+  const l = (n: 1 | 2) => `calc(var(--b-on-l${n}) - ${d.toFixed(1)}%)`;
+  const a = `var(--b-on-a)`;
+  return {
+    background: [
+      `radial-gradient(120% 90% at 12% 0%, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 58%)`,
+      `linear-gradient(150deg, hsl(${hue} var(--b-on-s) ${l(1)} / ${a}), hsl(${hue} var(--b-on-s2) ${l(2)} / ${a}))`,
+    ].join(", "),
+    boxShadow: [
+      `inset 0 0 0 1px rgb(255 255 255 / 0.12)`,
+      `0 1px 2px rgb(0 0 0 / 0.06)`,
+      `0 14px 26px -18px rgb(0 0 0 / calc(0.5 + var(--dk) * 0.2))`,
+    ].join(", "),
+  };
+}

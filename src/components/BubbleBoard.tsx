@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   ArrowUpRight,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Flag,
@@ -15,13 +16,19 @@ import {
   Trash2,
 } from "lucide-react";
 import { useGoHome } from "@/lib/goHome";
+import { tileStyle } from "@/lib/planet";
 import { usePlan } from "@/lib/store";
 import { bubbleNoteKey, deleteNotes } from "@/lib/notes";
 import type { Bubble, TreeId } from "@/lib/types";
 import { calendarYear } from "@/lib/weeks";
 import { NotesPanel } from "./NotesPanel";
 
-/** How wide a tile sits. Two across on a phone, four on a wide board. */
+/**
+ * How wide a tile sits, out of four. Two is the default, so a board reads two
+ * to a row until the user says otherwise.
+ */
+const DEFAULT_SPAN = 2;
+
 const SPANS: Record<1 | 2 | 3 | 4, string> = {
   1: "col-span-1",
   2: "col-span-2",
@@ -74,6 +81,7 @@ export function BubbleBoard({
   const addBubble = usePlan((s) => s.addBubble);
   const renameBubble = usePlan((s) => s.renameBubble);
   const resizeBubble = usePlan((s) => s.resizeBubble);
+  const resizeChildren = usePlan((s) => s.resizeChildren);
   const moveBubble = usePlan((s) => s.moveBubble);
   const deleteBubble = usePlan((s) => s.deleteBubble);
 
@@ -234,15 +242,27 @@ export function BubbleBoard({
           ) : (
             <>
               {editing && (
-                <p className="mb-3 text-xs text-faint">
-                  Drag a tile to move it, or use the arrows. 1 – 4 sets how many columns it takes,
-                  and the pencil renames it.
-                </p>
+                <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-edge bg-surface p-2.5 text-xs text-faint">
+                  <span className="font-medium text-muted">Every tile:</span>
+                  {([1, 2, 3, 4] as const).map((span) => (
+                    <button
+                      key={span}
+                      onClick={() => resizeChildren(treeId, focus.id, span)}
+                      className="h-6 w-6 rounded-full text-[11px] text-muted transition hover:bg-surface2 hover:text-fg"
+                    >
+                      {span}
+                    </button>
+                  ))}
+                  <span className="text-faint">columns</span>
+                  <span className="ml-auto">
+                    Drag a tile to move it, or use its arrows. The pencil renames it.
+                  </span>
+                </div>
               )}
 
               <ul className="grid grid-flow-row-dense grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {children.map((node, i) => (
-                  <li key={node.id} className={SPANS[node.span ?? 1]}>
+                  <li key={node.id} className={SPANS[node.span ?? DEFAULT_SPAN]}>
                     <Tile
                       node={node}
                       index={i}
@@ -372,44 +392,41 @@ export function BubbleBoard({
   );
 }
 
-/** The board's front door, before anything is opened. */
+/**
+ * The board's front door: one card in the middle of the screen, there to be
+ * gone through rather than read. Pressing it drops it down and out of the way
+ * before the board behind it arrives, so leaving the screen is the thing the
+ * screen most obviously does.
+ */
 function Hero({ node, hint, onOpen }: { node: Bubble; hint: string; onOpen: () => void }) {
-  return (
-    <button
-      onClick={onOpen}
-      className="tile is-in group relative mt-2 flex w-full flex-col justify-end overflow-hidden rounded-3xl border border-edge bg-surface p-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg sm:p-8"
-      style={{ minHeight: "min(22rem, 45vh)" }}
-    >
-      <Edge hue={node.hue} wide />
-      <span className="text-3xl font-semibold tracking-tight sm:text-4xl">{node.label}</span>
-      <span className="mt-2 max-w-md text-sm text-muted">{hint}</span>
-      <span className="mt-4 flex items-center gap-1 text-sm text-accentink">
-        Open <ArrowUpRight size={15} />
-      </span>
-    </button>
-  );
-}
+  const [leaving, setLeaving] = useState(false);
 
-/** The colour that tells one tile from another, without drowning the card. */
-function Edge({ hue, wide = false }: { hue: number; wide?: boolean }) {
+  const leave = () => {
+    if (leaving) return;
+    setLeaving(true);
+    // Matches the door's transition; the board is built the moment it lands.
+    setTimeout(onOpen, 260);
+  };
+
   return (
-    <>
-      <span
-        aria-hidden
-        className="absolute inset-y-0 left-0"
-        style={{
-          width: wide ? 8 : 5,
-          background: `linear-gradient(hsl(${hue} var(--b-on-s) var(--b-on-l1)), hsl(${hue} var(--b-on-s2) var(--b-on-l2)))`,
-        }}
-      />
-      <span
-        aria-hidden
-        className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background: `linear-gradient(110deg, hsl(${hue} var(--b-on-s) var(--b-on-l1) / 0.14), transparent 62%)`,
-        }}
-      />
-    </>
+    <div className="flex h-full min-h-[24rem] items-center justify-center py-6">
+      <button
+        onClick={leave}
+        style={tileStyle(node.hue)}
+        className={`door group flex w-[min(30rem,100%)] flex-col items-center gap-3 rounded-3xl px-8 py-12 text-center text-white transition-transform sm:py-16 ${
+          leaving ? "door-leaving" : "hover:-translate-y-1"
+        }`}
+      >
+        <span className="bubble-label text-4xl font-semibold tracking-tight sm:text-5xl">
+          {node.label}
+        </span>
+        <span className="bubble-label max-w-xs text-sm text-white/80">{hint}</span>
+        <span className="mt-2 flex flex-col items-center gap-1 text-sm text-white/90">
+          Open
+          <ChevronDown size={18} className="transition-transform group-hover:translate-y-0.5" />
+        </span>
+      </button>
+    </div>
   );
 }
 
@@ -459,12 +476,11 @@ function Tile({
   const ref = useReveal(index);
 
   const card =
-    "group relative flex h-full w-full min-h-[6.5rem] flex-col justify-between overflow-hidden rounded-2xl border border-edge bg-surface p-3.5 text-left transition sm:min-h-[7.5rem] sm:p-4";
+    "group relative flex h-full w-full min-h-[6.5rem] flex-col justify-between overflow-hidden rounded-2xl p-3.5 text-left text-white transition sm:min-h-[7.5rem] sm:p-4";
 
   if (renaming) {
     return (
-      <div ref={ref} className={`tile ${card}`}>
-        <Edge hue={node.hue} />
+      <div ref={ref} className={`tile ${card}`} style={tileStyle(node.hue)}>
         <InlineInput
           value={draft}
           onChange={onDraft}
@@ -478,21 +494,20 @@ function Tile({
 
   const body = (
     <>
-      <Edge hue={node.hue} />
-      <span className="flex items-start justify-between gap-1.5">
-        <span className="min-w-0 pl-1.5">
+      <span className="bubble-label flex items-start justify-between gap-1.5">
+        <span className="min-w-0">
           <span className="block text-base leading-snug font-medium break-words">{node.label}</span>
-          {subtitle && <span className="block text-xs text-faint tabular-nums">{subtitle}</span>}
+          {subtitle && <span className="block text-xs text-white/70 tabular-nums">{subtitle}</span>}
         </span>
         {hasNote && (
           <span
             aria-label="Has notes"
-            className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+            className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/85"
           />
         )}
       </span>
       {now && (
-        <span className="mt-2 w-fit rounded-full bg-accentsoft px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-accentink uppercase">
+        <span className="mt-2 w-fit rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-accentink uppercase">
           Now
         </span>
       )}
@@ -504,7 +519,8 @@ function Tile({
       <button
         ref={ref}
         onClick={onOpen}
-        className={`tile ${card} hover:-translate-y-0.5 hover:border-edge2 hover:shadow-md`}
+        style={tileStyle(node.hue)}
+        className={`tile ${card} hover:-translate-y-0.5 hover:brightness-105`}
       >
         {body}
       </button>
@@ -529,6 +545,7 @@ function Tile({
         const from = e.dataTransfer.getData("text/plain");
         if (from && from !== node.id) onDrop(from);
       }}
+      style={tileStyle(node.hue)}
       className={`tile ${card} cursor-grab active:cursor-grabbing ${dragging ? "opacity-50" : ""}`}
     >
       {body}
@@ -548,11 +565,11 @@ function Tile({
             key={span}
             onClick={() => onResize(span)}
             aria-label={`${span} column${span > 1 ? "s" : ""}`}
-            aria-pressed={(node.span ?? 1) === span}
+            aria-pressed={(node.span ?? DEFAULT_SPAN) === span}
             className={`h-6 w-6 rounded-full text-[11px] transition ${
-              (node.span ?? 1) === span
-                ? "bg-accentsoft font-medium text-accentink"
-                : "text-faint hover:bg-surface2 hover:text-fg"
+              (node.span ?? DEFAULT_SPAN) === span
+                ? "bg-white/90 font-medium text-accentink"
+                : "text-white/70 hover:bg-white/20 hover:text-white"
             }`}
           >
             {span}
@@ -581,8 +598,8 @@ function TileButton({
     <button
       aria-label={label}
       onClick={onClick}
-      className={`flex h-6 w-6 items-center justify-center rounded-full text-faint transition ${
-        danger ? "hover:bg-dangersoft hover:text-dangerink" : "hover:bg-surface2 hover:text-fg"
+      className={`flex h-6 w-6 items-center justify-center rounded-full text-white/70 transition ${
+        danger ? "hover:bg-white/25 hover:text-white" : "hover:bg-white/20 hover:text-white"
       }`}
     >
       {children}
