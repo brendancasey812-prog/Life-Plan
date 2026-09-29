@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Check, ImageIcon, NotebookPen, X } from "lucide-react";
+import { ArrowUpRight, Check, Flag, ImageIcon, NotebookPen, X } from "lucide-react";
 import { useGoHome } from "@/lib/goHome";
 import { bubbleNoteKey, weekNoteKey } from "@/lib/notes";
 import { byTargetAge, usePlan } from "@/lib/store";
@@ -98,6 +98,9 @@ export function WeeksGrid() {
             <Key className="bg-cellpast" label="Lived" />
             <Key className="bg-accent" label="Has a goal" />
             <Key className="bg-celldone" label="Done" />
+            <span className="flex items-center gap-1.5 text-accentink">
+              <Flag size={10} /> Milestone year
+            </span>
           </div>
 
           <div className="min-h-0 flex-1 overflow-auto px-4 pb-4 sm:px-6">
@@ -116,19 +119,22 @@ export function WeeksGrid() {
 
               {ages.map((age) => {
                 const isNow = age === now.age;
+                const marked = yearHasGoal(age);
                 return (
                   <div
                     key={age}
                     ref={isNow ? rowRef : undefined}
-                    className="flex items-center"
+                    className={`flex items-center ${marked ? "rounded-sm bg-accentsoft" : ""}`}
                     style={{ gap: GAP, marginBottom: GAP }}
                   >
-                    {/* The age opens what the year holds, where it holds anything. */}
+                    {/* A year carrying something is marked rather than left to
+                        be found: the flag says there is a milestone on it, the
+                        click says what. */}
                     <button
                       style={{ width: GUTTER }}
                       onClick={(e) =>
                         setPopped(
-                          yearHasGoal(age)
+                          marked
                             ? {
                                 age,
                                 x: e.clientX,
@@ -137,12 +143,17 @@ export function WeeksGrid() {
                             : null,
                         )
                       }
-                      aria-label={`Age ${age}`}
-                      className={`pr-2 text-right text-[10px] leading-none transition ${
-                        isNow ? "font-semibold text-accentink" : "text-faint"
-                      } ${yearHasGoal(age) ? "underline decoration-accent decoration-2 underline-offset-2 hover:text-fg" : ""}`}
+                      aria-label={marked ? `Age ${age} — what this year holds` : `Age ${age}`}
+                      className={`flex items-center justify-end gap-0.5 pr-1.5 text-[10px] leading-none transition ${
+                        marked
+                          ? "font-semibold text-accentink hover:brightness-110"
+                          : isNow
+                            ? "font-semibold text-accentink"
+                            : "text-faint"
+                      }`}
                     >
-                      {age % 5 === 0 || isNow || yearHasGoal(age) ? age : ""}
+                      {marked && <Flag size={9} className="shrink-0" />}
+                      {age % 5 === 0 || isNow || marked ? age : ""}
                     </button>
                     {cols.map((w) => {
                       const e = weeks[weekKey(age, w)];
