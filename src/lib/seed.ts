@@ -112,6 +112,23 @@ export function seedMapTree(): Tree {
   return { rootId: root.id, nodes };
 }
 
+/**
+ * Tab 4: the rooms and the things being made for them. It starts with the one
+ * it was built for and is a board like any other, so another room is a tile
+ * away.
+ */
+export function seedRoomTree(): Tree {
+  const root = makeBubble({ id: "rooms_root", label: "Marin Room", hue: 186, seeded: true });
+  const table = makeBubble({
+    label: "Glass Table — Wood Frame",
+    parentId: root.id,
+    hue: childHue(root.hue, 0, 2),
+    seeded: true,
+  });
+  root.childIds.push(table.id);
+  return { rootId: root.id, nodes: { [root.id]: root, [table.id]: table } };
+}
+
 export function seedTrees(): Record<TreeId, Tree> {
-  return { life: seedLifeTree(), map: seedMapTree() };
+  return { life: seedLifeTree(), map: seedMapTree(), rooms: seedRoomTree() };
 }

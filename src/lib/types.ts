@@ -1,5 +1,5 @@
 /** The two bubble trees the app renders — one per bubble tab. */
-export type TreeId = "life" | "map";
+export type TreeId = "life" | "map" | "rooms";
 
 /**
  * What a bubble's children should be filled with the first time it is opened.
@@ -174,6 +174,39 @@ export interface Focus {
   month: PeriodKey | null;
 }
 
+/**
+ * A part on a grid page, in the page's own units: where it sits and how big
+ * it is, seen from above. One rectangle is enough for a plan of a table — a
+ * leg, a rail, a sheet of glass — and the legend reads the materials off them.
+ */
+export interface BlueprintPart {
+  id: string;
+  label: string;
+  material: string;
+  /** Top-left corner, in units. */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Thickness or height off the plan, for the legend. Optional. */
+  thickness?: number;
+  notes?: string;
+}
+
+/** A grid page: a drawing to scale, with its parts and what they are made of. */
+export interface Blueprint {
+  title: string;
+  unit: "in" | "cm" | "mm";
+  /** Units between grid lines. */
+  grid: number;
+  /** The sheet's size in units, which the drawing is scaled to fit. */
+  width: number;
+  height: number;
+  parts: BlueprintPart[];
+  notes: string;
+  updatedAt: number;
+}
+
 export interface PlanState {
   settings: Settings;
   focus: Focus;
@@ -185,6 +218,8 @@ export interface PlanState {
   notes: Record<string, NoteMeta>;
   /** The entry tab's layout, in the order the cards appear. */
   widgets: Widget[];
+  /** Grid pages, keyed the way note pages are. */
+  blueprints: Record<string, Blueprint>;
   /** The long horizon: what should be true by when. */
   goals: LifeGoal[];
   house: HousePlan;

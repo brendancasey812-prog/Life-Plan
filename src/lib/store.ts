@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { findTimeline, todayKey, type PeriodKey, type Scope } from "./goals";
+import { makePart } from "./blueprint";
 import { goalNoteKey } from "./house";
 import { byDue, reminderNoteKey } from "./reminders";
 import {
@@ -15,8 +16,10 @@ import {
   weekNoteKey,
   writeNote,
 } from "./notes";
-import { MONTHS, childHue, makeBubble, newId, nextHue, seedTrees } from "./seed";
+import { MONTHS, childHue, makeBubble, newId, nextHue, seedRoomTree, seedTrees } from "./seed";
 import type {
+  Blueprint,
+  BlueprintPart,
   Bubble,
   Focus,
   HousePlan,
@@ -138,6 +141,11 @@ interface Actions {
   /** Shifts a card one slot back or forward, for boards without a mouse. */
   nudgeWidget: (id: string, delta: -1 | 1) => void;
   resetWidgets: () => void;
+  /** Starts a grid page on a bubble, or replaces the one it has. */
+  setBlueprint: (key: string, blueprint: Blueprint | null) => void;
+  addPart: (key: string, part?: Partial<BlueprintPart>) => void;
+  updatePart: (key: string, id: string, patch: Partial<BlueprintPart>) => void;
+  deletePart: (key: string, id: string) => void;
   /** Records what a note page holds; null once the page is empty or gone. */
   setNoteMeta: (key: string, meta: NoteMeta | null) => void;
   updateSettings: (patch: Partial<Settings>) => void;
@@ -173,6 +181,7 @@ function emptyState(): PlanState {
     pages: [],
     reminders: [],
     notes: {},
+    blueprints: {},
     widgets: defaultWidgets(),
     goals: defaultGoals(),
     house: defaultHouse(),
@@ -543,6 +552,59 @@ export const usePlan = create<PlanStore>()(
 
       resetWidgets: () => set({ widgets: defaultWidgets() }),
 
+      setBlueprint: (key, blueprint) =>
+        set((s) => {
+          const blueprints = { ...s.blueprints };
+          if (blueprint) blueprints[key] = { ...blueprint, updatedAt: Date.now() };
+          else delete blueprints[key];
+          return { blueprints };
+        }),
+
+      addPart: (key, part) => {
+        const current = get().blueprints[key];
+        if (!current) return;
+        set((s) => ({
+          blueprints: {
+            ...s.blueprints,
+            [key]: {
+              ...current,
+              parts: [...current.parts, makePart(part)],
+              updatedAt: Date.now(),
+            },
+          },
+        }));
+      },
+
+      updatePart: (key, id, patch) => {
+        const current = get().blueprints[key];
+        if (!current) return;
+        set((s) => ({
+          blueprints: {
+            ...s.blueprints,
+            [key]: {
+              ...current,
+              parts: current.parts.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+              updatedAt: Date.now(),
+            },
+          },
+        }));
+      },
+
+      deletePart: (key, id) => {
+        const current = get().blueprints[key];
+        if (!current) return;
+        set((s) => ({
+          blueprints: {
+            ...s.blueprints,
+            [key]: {
+              ...current,
+              parts: current.parts.filter((p) => p.id !== id),
+              updatedAt: Date.now(),
+            },
+          },
+        }));
+      },
+
       setNoteMeta: (key, meta) =>
         set((s) =>
           meta ? { notes: { ...s.notes, [key]: meta } } : { notes: withoutKeys(s.notes, [key]) },
@@ -556,7 +618,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 16,
+      version: 17,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -565,6 +627,7 @@ export const usePlan = create<PlanStore>()(
         pages: s.pages,
         reminders: s.reminders,
         notes: s.notes,
+        blueprints: s.blueprints,
         widgets: s.widgets,
         goals: s.goals,
         house: s.house,
@@ -730,6 +793,12 @@ export const usePlan = create<PlanStore>()(
           }
         }
 
+        // Rooms, and the grid pages that go with them, are new.
+        state.blueprints ??= {};
+        if (!state.trees?.rooms) {
+          state.trees = { ...state.trees, rooms: seedRoomTree() };
+        }
+
         // The index gained per-line content, then each line's ticked state,
         // then whether each line can carry a box at all, and later room for
         // more lines of a page than a card shows at once. Rebuild every meta
@@ -820,6 +889,7 @@ export function exportable(s: PlanState): PlanState {
     pages: s.pages,
     reminders: s.reminders,
     notes: s.notes,
+    blueprints: s.blueprints,
     widgets: s.widgets,
     goals: s.goals,
     house: s.house,
@@ -839,6 +909,7 @@ export function parsePlan(text: string): (PlanState & { noteBodies?: unknown }) 
       pages: data.pages ?? [],
       reminders: data.reminders ?? [],
       notes: data.notes ?? {},
+      blueprints: data.blueprints ?? {},
       widgets: data.widgets?.length ? data.widgets : defaultWidgets(),
       goals: data.goals ?? defaultGoals(),
       house: { ...defaultHouse(), ...data.house },

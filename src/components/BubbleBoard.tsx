@@ -215,6 +215,7 @@ export function BubbleBoard({
           meta={notes[bubbleNoteKey(treeId, focus.id)]}
           open={notesOpen}
           onOpenChange={setNotesOpen}
+          grid
         />
       )}
 
