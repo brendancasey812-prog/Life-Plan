@@ -15,6 +15,8 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { mondayOf, weekShort } from "@/lib/calendarWeek";
+import { periodOf, todayKey } from "@/lib/goals";
 import { useGoHome } from "@/lib/goHome";
 import { tileStyle } from "@/lib/planet";
 import { usePlan } from "@/lib/store";
@@ -113,6 +115,9 @@ export function BubbleBoard({
   const resizeChildren = usePlan((s) => s.resizeChildren);
   const moveBubble = usePlan((s) => s.moveBubble);
   const deleteBubble = usePlan((s) => s.deleteBubble);
+  const lifespan = usePlan((s) => s.settings.lifespan);
+  const setFocus = usePlan((s) => s.setFocus);
+  const setWeekFocus = usePlan((s) => s.setWeekFocus);
 
   // One reading of the clock for the whole board, so every level agrees on
   // which tile is now.
@@ -246,6 +251,27 @@ export function BubbleBoard({
               </span>
             ))}
           </nav>
+
+          {treeId === "life" && (
+            // Straight to what is being written now, from the top of the plan.
+            <span className="flex shrink-0 items-center gap-1.5">
+              <Link
+                href="/month"
+                onClick={() => setFocus("month", null)}
+                className="rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
+              >
+                <span className="text-faint">Month</span>{" "}
+                {periodOf(birthDate, lifespan, todayKey("month")).title.split(" — ")[1]}
+              </Link>
+              <Link
+                href="/week"
+                onClick={() => setWeekFocus(null)}
+                className="rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
+              >
+                <span className="text-faint">Week</span> {weekShort(mondayOf())}
+              </Link>
+            </span>
+          )}
 
           {focus && (
             <button
