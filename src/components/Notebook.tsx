@@ -8,6 +8,7 @@ import { deleteNotes, pageNoteKey } from "@/lib/notes";
 import { dueLabel, reminderNoteKey, reminderTitle } from "@/lib/reminders";
 import { pageTitle, usePlan } from "@/lib/store";
 import type { NoteMeta, TreeId } from "@/lib/types";
+import { weekLabel } from "@/lib/calendarWeek";
 import { formatRange } from "@/lib/weeks";
 import { NoteSheet } from "./NoteSheet";
 import { OutlineList } from "./OutlineList";
@@ -87,6 +88,14 @@ export function Notebook() {
           kind: "reminder",
           title: reminderTitle(reminder.title),
           context: reminder.done ? "Reminder · done" : `Reminder · ${dueLabel(reminder.due).text}`,
+          meta,
+        });
+      } else if (key.startsWith("cweek:")) {
+        out.push({
+          key,
+          kind: "week",
+          title: `Week of ${weekLabel(key.slice("cweek:".length))}`,
+          context: "Weekly goals",
           meta,
         });
       } else if (key.startsWith("week:")) {

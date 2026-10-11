@@ -56,7 +56,28 @@ const SizedImage = Image.extend({
 
 type SaveState = "idle" | "saving" | "saved";
 
-export function NoteEditor({ noteKey, placeholder }: { noteKey: string; placeholder: string }) {
+/** The markup a section is laid out as: a heading with a line ready under it. */
+function sectionHtml(name: string): string {
+  return (
+    `<h3>${name}</h3><ul data-type="taskList"><li data-checked="false" data-type="taskItem">` +
+    `<label><input type="checkbox"><span></span></label><div><p></p></div></li></ul>`
+  );
+}
+
+export function NoteEditor({
+  noteKey,
+  placeholder,
+  sections,
+}: {
+  noteKey: string;
+  placeholder: string;
+  /**
+   * Headings to lay the page out under, applied whenever `token` changes. It
+   * goes through the open editor rather than the stored page: the editor holds
+   * the document while it is open, and would write over anything put under it.
+   */
+  sections?: { names: string[]; token: number };
+}) {
   const setNoteMeta = usePlan((s) => s.setNoteMeta);
   const [loaded, setLoaded] = useState<{ key: string; body: NoteBody } | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -93,6 +114,7 @@ export function NoteEditor({ noteKey, placeholder }: { noteKey: string; placehol
       noteKey={noteKey}
       initial={body}
       placeholder={placeholder}
+      sections={sections}
       setNoteMeta={setNoteMeta}
       saveState={saveState}
       setSaveState={setSaveState}
@@ -107,6 +129,7 @@ function Surface({
   noteKey,
   initial,
   placeholder,
+  sections,
   setNoteMeta,
   saveState,
   setSaveState,
@@ -117,6 +140,7 @@ function Surface({
   noteKey: string;
   initial: NoteBody;
   placeholder: string;
+  sections?: { names: string[]; token: number };
   setNoteMeta: ReturnType<typeof usePlan.getState>["setNoteMeta"];
   saveState: SaveState;
   setSaveState: (s: SaveState) => void;
@@ -195,6 +219,27 @@ function Surface({
   useEffect(() => {
     editorRef.current = editor;
   }, [editor]);
+
+  // Only the headings the page does not already carry, so laying it out twice
+  // adds nothing and anything written stays where it is.
+  const token = sections?.token ?? 0;
+  // The count a page opens with counts as already applied: stepping to the
+  // next week or month must not lay that page out because the button was
+  // pressed on the last one.
+  const applied = useRef(token);
+  useEffect(() => {
+    if (!token || !editor || token === applied.current || !sections?.names.length) return;
+    applied.current = token;
+    const have = new Set<string>();
+    editor.state.doc.descendants((node) => {
+      if (node.type.name === "heading") have.add(node.textContent.trim().toLowerCase());
+    });
+    const missing = sections.names.filter((name) => !have.has(name.trim().toLowerCase()));
+    if (!missing.length) return;
+    editor.chain().focus("end").insertContent(missing.map(sectionHtml).join("")).run();
+    // `sections` is rebuilt every render; the token is what says to run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, editor]);
 
   // Leaving the page mid-edit must not drop the last few keystrokes.
   useEffect(() => {

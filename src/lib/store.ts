@@ -113,6 +113,8 @@ interface Actions {
   setWeekDone: (age: number, week: number, done: boolean) => void;
   /** Points the goal tabs, the header and the dashboard at a period. */
   setFocus: (scope: Scope, key: PeriodKey | null) => void;
+  /** Points the weekly tab at a week, by its Monday. */
+  setWeekFocus: (monday: string | null) => void;
   /**
    * Generates whatever of the My Life timeline a period needs, so the goal
    * tabs and the bubbles are looking at exactly the same page.
@@ -396,6 +398,8 @@ export const usePlan = create<PlanStore>()(
       },
 
       setFocus: (scope, key) => set((s) => ({ focus: { ...s.focus, [scope]: key } })),
+
+      setWeekFocus: (monday) => set((s) => ({ focus: { ...s.focus, week: monday } })),
 
       resolveTimeline: (age, month) => {
         if (age < 0 || age > get().settings.lifespan) return;

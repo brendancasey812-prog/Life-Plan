@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
+  CalendarCheck,
   CalendarDays,
   Check,
   ChevronLeft,
@@ -24,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { MONTHS } from "@/lib/seed";
+import { mondayOf, weekShort } from "@/lib/calendarWeek";
 import { todayKey } from "@/lib/goals";
 import { goHome } from "@/lib/goHome";
 import { useHydrated } from "@/lib/hydrated";
@@ -37,6 +39,7 @@ const nav = [
   { href: "/map", label: "Life Categories", icon: Compass },
   { href: "/rooms", label: "Marin Room", icon: Sofa },
   { href: "/year", label: "Yearly Goals", icon: Target },
+  { href: "/week", label: "Weekly Goals", icon: CalendarCheck },
   { href: "/month", label: "Monthly Goals", icon: CalendarDays },
   { href: "/goals", label: "Life Goals", icon: Flag },
   { href: "/house", label: "House", icon: Home },
@@ -103,6 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return {
       "/year": `${year.year}`,
       "/month": `${MONTHS[month.month ?? 0]} ${month.year}`,
+      "/week": weekShort(focus.week ?? mondayOf()),
     };
   }, [hydrated, focus]);
 

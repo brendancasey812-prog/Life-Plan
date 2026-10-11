@@ -44,6 +44,16 @@ export function OutlineList({
   // false. Only an explicit false means a line cannot take a box.
   const canCheck = (item: { checkable?: boolean }) => item.checkable !== false;
 
+  // A page laid out under headings carries every heading, written under or
+  // not. A card is a summary, so a heading with nothing under it yet is left
+  // off — the page itself still has it. Each line keeps the place it holds on
+  // the page, since that is what ticking it writes to.
+  const shown = items
+    .map((item, index) => ({ item, index }))
+    .filter(
+      ({ item, index }) => canCheck(item) || canCheck(items[index + 1] ?? { checkable: false }),
+    );
+
   async function toggle(index: number, text: string) {
     if (!noteKey || busy) return;
     setBusy(true);
@@ -57,7 +67,7 @@ export function OutlineList({
     }
   }
 
-  if (items.length === 0) {
+  if (shown.length === 0) {
     return empty ? (
       <p className={`${size === "sm" ? "text-sm" : "text-base"} text-faint ${className}`}>
         {empty}
@@ -70,15 +80,15 @@ export function OutlineList({
 
   return (
     <ul className={`${size === "sm" ? "space-y-1" : "space-y-1.5"} ${className}`}>
-      {(expanded ? items : items.slice(0, limit)).map((item, i) => (
-        <li key={i} className={`flex items-start gap-2.5 ${text}`}>
+      {(expanded ? shown : shown.slice(0, limit)).map(({ item, index }) => (
+        <li key={index} className={`flex items-start gap-2.5 ${text}`}>
           {canCheck(item) ? (
             <button
               onClick={(e) => {
                 // These sit inside cards that are themselves links.
                 e.preventDefault();
                 e.stopPropagation();
-                void toggle(i, item.text);
+                void toggle(index, item.text);
               }}
               disabled={busy}
               aria-pressed={!!item.done}
@@ -110,7 +120,7 @@ export function OutlineList({
           </span>
         </li>
       ))}
-      {items.length > limit && (
+      {shown.length > limit && (
         <li className={`pl-[28px] ${size === "sm" ? "text-xs" : "text-sm"}`}>
           {/* These sit inside cards that are themselves links. */}
           <button
@@ -121,7 +131,7 @@ export function OutlineList({
             }}
             className="text-faint transition hover:text-fg"
           >
-            {expanded ? "Show less" : `+${items.length - limit} more`}
+            {expanded ? "Show less" : `+${shown.length - limit} more`}
           </button>
         </li>
       )}

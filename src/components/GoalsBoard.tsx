@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
 import {
   ArrowUpRight,
+  ListTree,
   ChevronLeft,
   ChevronRight,
   ImageIcon,
@@ -11,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useGoHome } from "@/lib/goHome";
+import { usePlan } from "@/lib/store";
 import { useGoalPage, type Scope } from "@/lib/useGoalPage";
 import { NoteEditor } from "./NoteEditor";
 import { NoteGallery } from "./NoteGallery";
@@ -31,6 +34,17 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
 
   const pathname = usePathname();
   useGoHome(pathname, today);
+
+  // The headings a goal page is laid out under: what the plan is built around,
+  // plus one for everything that belongs to none of them.
+  const map = usePlan((s) => s.trees.map);
+  const [layout, setLayout] = useState(0);
+  const headings = useMemo(() => {
+    const areas = (map.nodes[map.rootId]?.childIds ?? [])
+      .map((id) => map.nodes[id]?.label)
+      .filter((label): label is string => !!label);
+    return [...areas, "Miscellaneous"];
+  }, [map]);
 
   const unit = scope === "year" ? "year" : "month";
 
@@ -100,14 +114,26 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
                 <ChevronRight size={18} />
               </button>
             </div>
-            <Link
-              href="/life"
-              className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
-            >
-              <Sparkles size={13} className="text-accentink" />
-              {trail.join("  ›  ")}
-              <ArrowUpRight size={13} />
-            </Link>
+            <span className="flex flex-wrap items-center gap-2">
+              {/* Lays the page out under the life categories. Anything already
+                  written stays where it is. */}
+              <button
+                onClick={() => setLayout((n) => n + 1)}
+                title="Add a heading for each life category, and one for the rest"
+                className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
+              >
+                <ListTree size={13} className="text-accentink" />
+                By category
+              </button>
+              <Link
+                href="/life"
+                className="flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3 py-1.5 text-xs text-muted transition hover:bg-surface2 hover:text-fg"
+              >
+                <Sparkles size={13} className="text-accentink" />
+                {trail.join("  ›  ")}
+                <ArrowUpRight size={13} />
+              </Link>
+            </span>
           </div>
           <p className="mt-2 max-w-2xl text-sm text-muted">
             The same page as that bubble in My Life — write in either place and both show it.
@@ -118,6 +144,7 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
           <section className="pane flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border border-edge bg-surface lg:min-h-[34rem]">
             <NoteEditor
               noteKey={noteKey}
+              sections={{ names: headings, token: layout }}
               placeholder={
                 scope === "year"
                   ? "What does this year need to be? Write it down, break it into steps…"

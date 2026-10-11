@@ -172,6 +172,8 @@ export interface Settings {
 export interface Focus {
   year: PeriodKey | null;
   month: PeriodKey | null;
+  /** The Monday of the week the weekly tab is on; null follows today. */
+  week?: string | null;
 }
 
 /**
