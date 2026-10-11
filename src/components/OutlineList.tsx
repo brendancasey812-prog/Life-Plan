@@ -76,6 +76,8 @@ export function OutlineList({
   }
 
   const text = size === "sm" ? "text-sm" : "text-base";
+  // Only indent the goals when there are headings to indent them under.
+  const under = shown.some(({ item }) => !canCheck(item)) ? "pl-1.5" : "";
   const box = size === "sm" ? "h-4 w-4" : "h-[18px] w-[18px]";
 
   return (
@@ -85,7 +87,7 @@ export function OutlineList({
           key={index}
           className={
             canCheck(item)
-              ? `flex items-start gap-2.5 ${text}`
+              ? `flex items-start gap-2.5 ${under} ${text}`
               : // A heading, which the goal pages are laid out under: it names
                 // the lines beneath it rather than sitting among them.
                 "pt-2 first:pt-0"
@@ -93,7 +95,7 @@ export function OutlineList({
         >
           {!canCheck(item) ? (
             <span
-              className={`block font-semibold tracking-[0.1em] text-faint uppercase ${
+              className={`block font-semibold tracking-[0.12em] text-accentink uppercase ${
                 size === "sm" ? "text-[10px]" : "text-[11px]"
               }`}
             >

@@ -84,6 +84,7 @@ export function defaultWidgets(): Widget[] {
     ["lastYearGoals", 4],
     ["monthGoals", 4],
     ["lastMonthGoals", 4],
+    ["weekGoals", 4],
     // A row of four: the day, what is due, and the week ahead.
     ["date", 1],
     ["reminders", 2],
@@ -622,7 +623,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 17,
+      version: 18,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -801,6 +802,20 @@ export const usePlan = create<PlanStore>()(
         state.blueprints ??= {};
         if (!state.trees?.rooms) {
           state.trees = { ...state.trees, rooms: seedRoomTree() };
+        }
+
+        // The week being written now is a card like the month and the year.
+        if (!state.widgets.some((w) => w.kind === "weekGoals")) {
+          const widgets = [...state.widgets];
+          const after = widgets.findLastIndex((w) =>
+            ["monthGoals", "lastMonthGoals"].includes(w.kind),
+          );
+          widgets.splice(after < 0 ? widgets.length : after + 1, 0, {
+            id: newId("w"),
+            kind: "weekGoals",
+            span: 4,
+          });
+          state.widgets = widgets;
         }
 
         // The index gained per-line content, then each line's ticked state,

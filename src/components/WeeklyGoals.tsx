@@ -49,7 +49,7 @@ export function WeeklyGoals({
               : "text-base font-medium"
           }
         >
-          Weekly goals
+          Every week
         </h3>
         <span className="flex shrink-0 items-center gap-1">
           {anyDone && (
@@ -83,8 +83,8 @@ export function WeeklyGoals({
       {editing && (
         <NoteSheet
           noteKey={WEEKLY_GOALS_KEY}
-          title="Weekly goals"
-          subtitle="The same list every week — it is not tied to one"
+          title="Every week"
+          subtitle="The list that comes round every week"
           placeholder={PLACEHOLDER}
           onClose={() => setEditing(false)}
         />

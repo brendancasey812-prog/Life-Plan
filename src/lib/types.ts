@@ -77,6 +77,7 @@ export type WidgetKind =
   | "monthGoals"
   | "lastYearGoals"
   | "lastMonthGoals"
+  | "weekGoals"
   | "weeklyGoals"
   | "lifeGoals"
   | "bubbles"

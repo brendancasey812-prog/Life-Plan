@@ -19,6 +19,7 @@ import {
   Target,
 } from "lucide-react";
 import { planetStyle } from "@/lib/planet";
+import { calendarWeekKey, mondayOf, weekShort } from "@/lib/calendarWeek";
 import { goalNoteKey } from "@/lib/house";
 import { byDue, daysUntil, dueLabel, reminderTitle, type DueTone } from "@/lib/reminders";
 import { MONTHS } from "@/lib/seed";
@@ -36,8 +37,9 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
   monthGoals: { label: "Monthly goals", hint: "The month you are on", icon: CalendarDays },
   lastYearGoals: { label: "Last year", hint: "The year before that one", icon: History },
   lastMonthGoals: { label: "Last month", hint: "The month before that one", icon: History },
+  weekGoals: { label: "Weekly goals", hint: "The week you are on", icon: CalendarRange },
   weeklyGoals: {
-    label: "Weekly goals",
+    label: "Every week",
     hint: "The standing list, every week",
     icon: CalendarCheck,
   },
@@ -63,6 +65,8 @@ export function WidgetBody({ kind }: { kind: WidgetKind }) {
       return <GoalWidget scope="year" shift={-1} />;
     case "lastMonthGoals":
       return <GoalWidget scope="month" shift={-1} />;
+    case "weekGoals":
+      return <WeekGoalsWidget />;
     case "weeklyGoals":
       return <WeeklyGoals />;
     case "lifeGoals":
@@ -287,6 +291,42 @@ function RecentNotesWidget() {
             <OutlineList key={key} meta={meta} noteKey={key} limit={3} size="sm" />
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The week being written now — the same page the weekly tab opens, so a goal
+ * ticked on either shows on both, and stepping to another week on the tab
+ * brings the card with it.
+ */
+function WeekGoalsWidget() {
+  const focused = usePlan((s) => s.focus.week);
+  const monday = focused ?? mondayOf();
+  const key = calendarWeekKey(monday);
+  const meta = usePlan((s) => s.notes[key]);
+
+  return (
+    <div className="flex h-full flex-col">
+      <Link href="/week" className="block">
+        <span className="flex items-start justify-between gap-2">
+          <span className="min-w-0">
+            <span className="block text-xs font-medium tracking-[0.14em] text-accentink uppercase">
+              Weekly goals
+            </span>
+            <span className="block text-2xl font-semibold tracking-tight">{weekShort(monday)}</span>
+          </span>
+          <ArrowUpRight size={17} className="mt-1.5 shrink-0 text-faint" />
+        </span>
+      </Link>
+      <div className="mt-3 flex-1">
+        <OutlineList meta={meta} noteKey={key} empty="Nothing written yet — open it to start." />
+      </div>
+      {!!meta?.images && (
+        <span className="mt-2.5 flex items-center gap-1.5 text-sm text-faint">
+          <ImageIcon size={13} /> {meta.images} picture{meta.images === 1 ? "" : "s"}
+        </span>
       )}
     </div>
   );
