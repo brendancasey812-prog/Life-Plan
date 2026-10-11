@@ -35,9 +35,6 @@ export function LifeGoals() {
         <header className="flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Life Goals</h1>
-            <p className="mt-1 text-sm text-muted">
-              What should be true by when. Each one shows on the age it is aimed at.
-            </p>
           </div>
           <button
             onClick={() => setOpenId(addGoal("", Math.min(100, ageNow + 5)))}

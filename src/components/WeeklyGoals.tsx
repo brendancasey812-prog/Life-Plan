@@ -70,11 +70,7 @@ export function WeeklyGoals({
         </span>
       </div>
 
-      <p className={`${small ? "text-xs" : "text-sm"} text-faint`}>
-        The same list every week, not just this one.
-      </p>
-
-      <div className={small ? "mt-2" : "mt-3 flex-1"}>
+      <div className={small ? "mt-1.5" : "mt-2 flex-1"}>
         <OutlineList
           meta={meta}
           noteKey={WEEKLY_GOALS_KEY}

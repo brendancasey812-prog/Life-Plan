@@ -135,9 +135,6 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
               </Link>
             </span>
           </div>
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            The same page as that bubble in My Life — write in either place and both show it.
-          </p>
         </header>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">

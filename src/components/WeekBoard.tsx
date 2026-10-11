@@ -10,7 +10,7 @@ import {
   ListTree,
   RotateCcw,
 } from "lucide-react";
-import { calendarWeekKey, dateOf, mondayOf, stepWeek, weekLabel } from "@/lib/calendarWeek";
+import { calendarWeekKey, mondayOf, stepWeek, weekLabel } from "@/lib/calendarWeek";
 import { useGoHome } from "@/lib/goHome";
 import { usePlan } from "@/lib/store";
 import { NoteEditor } from "./NoteEditor";
@@ -42,10 +42,6 @@ export function WeekBoard() {
       .filter((label): label is string => !!label);
     return [...areas, "Miscellaneous"];
   }, [map]);
-
-  const away = Math.round(
-    (dateOf(monday).getTime() - dateOf(thisWeek).getTime()) / (7 * 24 * 60 * 60 * 1000),
-  );
 
   return (
     <div className="h-full overflow-y-auto">
@@ -102,16 +98,6 @@ export function WeekBoard() {
               By category
             </button>
           </div>
-
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            Monday to Sunday.{" "}
-            {isThisWeek
-              ? "This week."
-              : away > 0
-                ? `${away} week${away === 1 ? "" : "s"} ahead.`
-                : `${-away} week${away === -1 ? "" : "s"} back.`}{" "}
-            The standing list that comes round every week is on the Overview.
-          </p>
         </header>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
