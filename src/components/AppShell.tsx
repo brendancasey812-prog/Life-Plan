@@ -87,11 +87,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [editingTabs, setEditingTabs] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const bar = useRef<HTMLElement>(null);
+  const tray = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!openMenu) return;
     const away = (e: PointerEvent) => {
-      if (!bar.current?.contains(e.target as Node)) setOpenMenu(null);
+      const at = e.target as Node;
+      if (!bar.current?.contains(at) && !tray.current?.contains(at)) setOpenMenu(null);
     };
     const escape = (e: KeyboardEvent) => e.key === "Escape" && setOpenMenu(null);
     document.addEventListener("pointerdown", away);
@@ -249,62 +251,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               const Icon = menu.icon;
 
               return (
-                <div key={menu.label} className="relative shrink-0">
-                  <button
-                    onClick={() => setOpenMenu(open ? null : menu.label)}
-                    aria-expanded={open}
-                    aria-haspopup="menu"
-                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
-                      here
+                <button
+                  key={menu.label}
+                  onClick={() => setOpenMenu(open ? null : menu.label)}
+                  aria-expanded={open}
+                  aria-haspopup="menu"
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
+                    open
+                      ? "bg-accent text-white"
+                      : here
                         ? "bg-accentsoft text-accentink"
                         : "text-muted hover:bg-surface hover:text-fg"
-                    }`}
-                  >
-                    <Icon size={16} className="shrink-0" />
-                    {menu.label}
-                    {here && <span className="text-accentink/70">— {here.label}</span>}
-                    <ChevronDown
-                      size={14}
-                      className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {open && (
-                    <div
-                      role="menu"
-                      className="pane absolute top-full left-0 z-50 mt-1.5 min-w-[13rem] rounded-xl border border-edge bg-sheet p-1 shadow-xl"
-                    >
-                      {items.map(({ href, label, icon: ItemIcon }) => {
-                        const active = current === href;
-                        return (
-                          <Link
-                            key={href}
-                            href={href}
-                            role="menuitem"
-                            onClick={() => {
-                              // Already here: send the screen home instead.
-                              if (active) goHome(href);
-                              setOpenMenu(null);
-                            }}
-                            className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm whitespace-nowrap transition ${
-                              active
-                                ? "bg-accentsoft font-medium text-accentink"
-                                : "text-muted hover:bg-surface2 hover:text-fg"
-                            }`}
-                          >
-                            <ItemIcon size={15} className="shrink-0" />
-                            {label}
-                            {dated[href] && (
-                              <span className={active ? "text-accentink/70" : "text-faint"}>
-                                — {dated[href]}
-                              </span>
-                            )}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                  }`}
+                >
+                  <Icon size={16} className="shrink-0" />
+                  {menu.label}
+                  {here && !open && <span className="text-accentink/70">— {here.label}</span>}
+                  <ChevronDown
+                    size={14}
+                    className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+                  />
+                </button>
               );
             })}
         </nav>
@@ -331,6 +298,51 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Settings size={17} />
         </button>
       </header>
+
+      {/* Under the bar rather than hanging off a button: the bar scrolls
+          sideways, and a panel inside a scroller is cut off at its edge. */}
+      {openMenu && (
+        <div
+          ref={tray}
+          role="menu"
+          className="pane shrink-0 border-b border-edge bg-sheet px-3 py-2 shadow-lg sm:px-5"
+        >
+          <div className="flex flex-wrap items-center gap-1.5">
+            {shown
+              .filter((tab) =>
+                MENUS.find((m) => m.label === openMenu)?.items.some((i) => i.href === tab.href),
+              )
+              .map(({ href, label, icon: ItemIcon }) => {
+                const active = current === href;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    role="menuitem"
+                    onClick={() => {
+                      // Already here: send the screen home instead.
+                      if (active) goHome(href);
+                      setOpenMenu(null);
+                    }}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm whitespace-nowrap transition ${
+                      active
+                        ? "border-transparent bg-accentsoft font-medium text-accentink"
+                        : "border-edge bg-surface text-muted hover:bg-surface2 hover:text-fg"
+                    }`}
+                  >
+                    <ItemIcon size={15} className="shrink-0" />
+                    {label}
+                    {dated[href] && (
+                      <span className={active ? "text-accentink/70" : "text-faint"}>
+                        {dated[href]}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       <main className="min-h-0 flex-1">{children}</main>
 
