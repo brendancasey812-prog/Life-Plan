@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   ChevronDown,
@@ -69,7 +70,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [showSettings, setShowSettings] = useState(false);
   const [editingTabs, setEditingTabs] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [anchor, setAnchor] = useState(0);
+  /** Where the list hangs: the bottom-left corner of the menu it came from. */
+  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
   const bar = useRef<HTMLElement>(null);
   const tray = useRef<HTMLDivElement>(null);
 
@@ -235,9 +237,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <button
                   key={menu.label}
                   onClick={(e) => {
-                    // Where the panel lines up on a wide screen: the menu's
-                    // own edge, less the tray's padding.
-                    setAnchor(Math.max(0, e.currentTarget.getBoundingClientRect().left - 20));
+                    const box = e.currentTarget.getBoundingClientRect();
+                    setAnchor({ x: box.left, y: box.bottom + 6 });
                     setOpenMenu(open ? null : menu.label);
                   }}
                   aria-expanded={open}
@@ -284,17 +285,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </button>
       </header>
 
-      {/* Under the bar rather than hanging off a button: the bar scrolls
-          sideways, and a panel inside a scroller is cut off at its edge. */}
-      {openMenu && (
-        <div
-          ref={tray}
-          role="menu"
-          className="pane shrink-0 border-b border-edge bg-sheet px-3 py-2 shadow-lg sm:px-5"
-        >
+      {/* Over the page rather than in it: a row under the bar pushed every
+          screen down, and a panel inside the bar was clipped by its scroller.
+          A portal is outside both. */}
+      {openMenu &&
+        createPortal(
           <div
-            style={{ "--anchor": `${anchor}px` } as React.CSSProperties}
-            className="flex w-full flex-col gap-1 sm:ml-[min(var(--anchor),calc(100%-17rem))] sm:w-64"
+            ref={tray}
+            role="menu"
+            style={{
+              top: anchor.y,
+              left: Math.min(anchor.x, Math.max(8, window.innerWidth - 232)),
+            }}
+            className="fixed z-50 w-56 rounded-xl border border-edge bg-sheetsolid py-1 shadow-xl"
           >
             {shown
               .filter((tab) =>
@@ -312,24 +315,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       if (active) goHome(href);
                       setOpenMenu(null);
                     }}
-                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${
+                    className={`flex items-baseline justify-between gap-3 px-3 py-1.5 text-sm transition ${
                       active
-                        ? "border-transparent bg-accentsoft font-medium text-accentink"
-                        : "border-edge bg-surface text-muted hover:bg-surface2 hover:text-fg"
+                        ? "font-medium text-accentink"
+                        : "text-muted hover:bg-surface2 hover:text-fg"
                     }`}
                   >
                     {label}
-                    {dated[href] && (
-                      <span className={active ? "text-accentink/70" : "text-faint"}>
-                        {dated[href]}
-                      </span>
-                    )}
+                    {dated[href] && <span className="text-xs text-faint">{dated[href]}</span>}
                   </Link>
                 );
               })}
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       <main className="min-h-0 flex-1">{children}</main>
 

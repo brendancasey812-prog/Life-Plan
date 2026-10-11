@@ -32,6 +32,9 @@
   --edge-2: light-dark(rgb(35 39 46 / 0.24), rgb(226 232 240 / 0.24));
 
   --sheet: light-dark(rgb(250 250 248 / 0.94), rgb(20 23 29 / 0.94));
+  /* The same colour with nothing behind it, for a menu that must not have the
+     page reading through it. */
+  --sheet-solid: light-dark(rgb(250 250 248), rgb(20 23 29));
   --scrim: light-dark(rgb(38 42 48 / 0.3), rgb(6 8 11 / 0.62));
 
   /* Sage-teal, clay, moss — quiet enough to live under text all day. */
@@ -129,6 +132,7 @@
   --color-edge: var(--edge);
   --color-edge2: var(--edge-2);
   --color-sheet: var(--sheet);
+  --color-sheetsolid: var(--sheet-solid);
   --color-scrim: var(--scrim);
   --color-accent: var(--accent);
   --color-accentsoft: var(--accent-soft);
