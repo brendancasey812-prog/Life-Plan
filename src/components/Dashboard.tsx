@@ -53,7 +53,15 @@ export function Dashboard() {
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-        <header className="mb-4 flex items-center gap-3">
+        {/* While the board is being edited the header follows the scroll:
+            Done was at the top of a board that is several screens long. */}
+        <header
+          className={`mb-4 flex items-center gap-3 ${
+            editing
+              ? "sticky top-0 z-20 -mx-4 border-b border-edge bg-sheetsolid px-4 py-2 sm:-mx-6 sm:px-6"
+              : ""
+          }`}
+        >
           <h1 className="flex-1 text-2xl font-semibold tracking-tight">Overview</h1>
           {editing && (
             <button
