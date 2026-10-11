@@ -72,11 +72,12 @@ export function NoteEditor({
   noteKey: string;
   placeholder: string;
   /**
-   * Headings to lay the page out under, applied whenever `token` changes. It
-   * goes through the open editor rather than the stored page: the editor holds
-   * the document while it is open, and would write over anything put under it.
+   * Headings to lay the page out under, applied whenever `token` changes, and
+   * on a page with nothing on it when `auto` is set. It goes through the open
+   * editor rather than the stored page: the editor holds the document while it
+   * is open, and would write over anything put under it.
    */
-  sections?: { names: string[]; token: number };
+  sections?: { names: string[]; token: number; auto?: boolean };
 }) {
   const setNoteMeta = usePlan((s) => s.setNoteMeta);
   const [loaded, setLoaded] = useState<{ key: string; body: NoteBody } | null>(null);
@@ -140,7 +141,7 @@ function Surface({
   noteKey: string;
   initial: NoteBody;
   placeholder: string;
-  sections?: { names: string[]; token: number };
+  sections?: { names: string[]; token: number; auto?: boolean };
   setNoteMeta: ReturnType<typeof usePlan.getState>["setNoteMeta"];
   saveState: SaveState;
   setSaveState: (s: SaveState) => void;
@@ -227,6 +228,16 @@ function Surface({
   // next week or month must not lay that page out because the button was
   // pressed on the last one.
   const applied = useRef(token);
+
+  // An empty page opens already laid out, rather than waiting to be asked.
+  useEffect(() => {
+    if (!editor || !sections?.auto || !sections.names.length) return;
+    if (editor.getText().trim()) return;
+    editor.chain().focus("end").insertContent(sections.names.map(sectionHtml).join("")).run();
+    // Once, when the editor for this page is ready.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
+
   useEffect(() => {
     if (!token || !editor || token === applied.current || !sections?.names.length) return;
     applied.current = token;

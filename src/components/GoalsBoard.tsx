@@ -141,7 +141,7 @@ export function GoalsBoard({ scope }: { scope: Scope }) {
           <section className="pane flex min-h-[26rem] flex-col overflow-hidden rounded-2xl border border-edge bg-surface lg:min-h-[34rem]">
             <NoteEditor
               noteKey={noteKey}
-              sections={{ names: headings, token: layout }}
+              sections={{ names: headings, token: layout, auto: true }}
               placeholder={
                 scope === "year"
                   ? "What does this year need to be? Write it down, break it into steps…"

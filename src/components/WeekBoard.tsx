@@ -105,7 +105,7 @@ export function WeekBoard() {
             <NoteEditor
               noteKey={noteKey}
               placeholder="What has to happen this week?"
-              sections={{ names: headings, token: layout }}
+              sections={{ names: headings, token: layout, auto: true }}
             />
           </section>
 

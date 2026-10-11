@@ -111,9 +111,14 @@ export function metaOf(body: NoteBody): NoteMeta | null {
   const pictures = pictureCount(body);
   const text = body.text ?? "";
   if (!text.trim() && pictures === 0) return null;
+  const outline = outlineOf(body.html ?? "", text);
+  // A goal page opens laid out under its headings. Until something is written
+  // under one of them the page is still empty, and a card or a list that says
+  // otherwise is listing furniture.
+  if (pictures === 0 && outline.length > 0 && !outline.some((item) => item.checkable)) return null;
   return {
     excerpt: excerptOf(text),
-    outline: outlineOf(body.html ?? "", text),
+    outline,
     images: pictures,
     updatedAt: body.updatedAt,
   };

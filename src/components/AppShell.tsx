@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarCheck,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CalendarRange,
@@ -18,6 +19,7 @@ import {
   NotebookPen,
   Pencil,
   Plus,
+  Repeat,
   Settings,
   Sofa,
   Sparkles,
@@ -32,25 +34,73 @@ import { useHydrated } from "@/lib/hydrated";
 import { usePlan } from "@/lib/store";
 import { SettingsPanel } from "./SettingsPanel";
 
-const nav = [
-  { href: "/", label: "Overview", icon: LayoutGrid },
-  { href: "/life", label: "Life Plan", icon: Sparkles },
-  { href: "/weeks", label: "Weeks", icon: CalendarRange },
-  { href: "/map", label: "Life Categories", icon: Compass },
-  { href: "/rooms", label: "Marin Room", icon: Sofa },
-  { href: "/year", label: "Yearly Goals", icon: Target },
-  { href: "/week", label: "Weekly Goals", icon: CalendarCheck },
-  { href: "/month", label: "Monthly Goals", icon: CalendarDays },
-  { href: "/goals", label: "Life Goals", icon: Flag },
-  { href: "/house", label: "House", icon: Home },
-  { href: "/reminders", label: "Reminders", icon: BellRing },
-  { href: "/notes", label: "Notes", icon: NotebookPen },
+/**
+ * The bar in four: where you are, the goals that come round, the ones that are
+ * a single thing being worked towards, and everything written down. A tab
+ * still has one route — the menus only say which company it keeps.
+ */
+const MENUS = [
+  {
+    label: "Overview",
+    icon: LayoutGrid,
+    items: [
+      { href: "/", label: "Overview", icon: LayoutGrid },
+      { href: "/life", label: "Life Plan", icon: Sparkles },
+      { href: "/map", label: "Life Categories", icon: Compass },
+      { href: "/weeks", label: "Weeks", icon: CalendarRange },
+    ],
+  },
+  {
+    label: "General Goals",
+    icon: Target,
+    items: [
+      { href: "/goals", label: "Life Goals", icon: Flag },
+      { href: "/week", label: "Weekly Goals", icon: CalendarCheck },
+      { href: "/month", label: "Monthly Goals", icon: CalendarDays },
+      { href: "/year", label: "Yearly Goals", icon: Target },
+    ],
+  },
+  {
+    label: "Specific Goals",
+    icon: Home,
+    items: [
+      { href: "/house", label: "House Plan", icon: Home },
+      { href: "/rooms", label: "Marin Room", icon: Sofa },
+    ],
+  },
+  {
+    label: "Notes",
+    icon: NotebookPen,
+    items: [
+      { href: "/notes", label: "Notes", icon: NotebookPen },
+      { href: "/reminders", label: "Reminders", icon: BellRing },
+      { href: "/weekly", label: "Every Week", icon: Repeat },
+    ],
+  },
 ];
+
+const nav = MENUS.flatMap((menu) => menu.items);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [showSettings, setShowSettings] = useState(false);
   const [editingTabs, setEditingTabs] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const bar = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!openMenu) return;
+    const away = (e: PointerEvent) => {
+      if (!bar.current?.contains(e.target as Node)) setOpenMenu(null);
+    };
+    const escape = (e: KeyboardEvent) => e.key === "Escape" && setOpenMenu(null);
+    document.addEventListener("pointerdown", away);
+    window.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      window.removeEventListener("keydown", escape);
+    };
+  }, [openMenu]);
   // trailingSlash: true means routes arrive as "/weeks/".
   const current = pathname.replace(/\/+$/, "") || "/";
 
@@ -113,7 +163,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col">
       <header className="pane flex shrink-0 items-center gap-3 border-b border-edge px-3 py-3 sm:px-5">
-        <nav className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav
+          ref={bar}
+          className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {editingTabs &&
             shown.map(({ href, label, icon: Icon }) => (
               <span
@@ -184,27 +237,74 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
 
           {!editingTabs &&
-            shown.map(({ href, label, icon: Icon }) => {
-              const active = current === href;
-              const suffix = dated[href];
+            MENUS.map((menu) => {
+              // A menu shows what is left of it: a tab taken off the bar is
+              // gone from here too, and a menu with nothing left goes with it.
+              const items = shown.filter((tab) =>
+                menu.items.some((item) => item.href === tab.href),
+              );
+              if (!items.length) return null;
+              const here = items.find((item) => item.href === current);
+              const open = openMenu === menu.label;
+              const Icon = menu.icon;
+
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  // Already here: send the screen home instead of navigating.
-                  onClick={() => active && goHome(href)}
-                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
-                    active
-                      ? "bg-accentsoft text-accentink"
-                      : "text-muted hover:bg-surface hover:text-fg"
-                  }`}
-                >
-                  <Icon size={16} className="shrink-0" />
-                  {label}
-                  {suffix && (
-                    <span className={active ? "text-accentink/80" : "text-faint"}>— {suffix}</span>
+                <div key={menu.label} className="relative shrink-0">
+                  <button
+                    onClick={() => setOpenMenu(open ? null : menu.label)}
+                    aria-expanded={open}
+                    aria-haspopup="menu"
+                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
+                      here
+                        ? "bg-accentsoft text-accentink"
+                        : "text-muted hover:bg-surface hover:text-fg"
+                    }`}
+                  >
+                    <Icon size={16} className="shrink-0" />
+                    {menu.label}
+                    {here && <span className="text-accentink/70">— {here.label}</span>}
+                    <ChevronDown
+                      size={14}
+                      className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {open && (
+                    <div
+                      role="menu"
+                      className="pane absolute top-full left-0 z-50 mt-1.5 min-w-[13rem] rounded-xl border border-edge bg-sheet p-1 shadow-xl"
+                    >
+                      {items.map(({ href, label, icon: ItemIcon }) => {
+                        const active = current === href;
+                        return (
+                          <Link
+                            key={href}
+                            href={href}
+                            role="menuitem"
+                            onClick={() => {
+                              // Already here: send the screen home instead.
+                              if (active) goHome(href);
+                              setOpenMenu(null);
+                            }}
+                            className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm whitespace-nowrap transition ${
+                              active
+                                ? "bg-accentsoft font-medium text-accentink"
+                                : "text-muted hover:bg-surface2 hover:text-fg"
+                            }`}
+                          >
+                            <ItemIcon size={15} className="shrink-0" />
+                            {label}
+                            {dated[href] && (
+                              <span className={active ? "text-accentink/70" : "text-faint"}>
+                                — {dated[href]}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
-                </Link>
+                </div>
               );
             })}
         </nav>

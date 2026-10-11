@@ -81,8 +81,25 @@ export function OutlineList({
   return (
     <ul className={`${size === "sm" ? "space-y-1" : "space-y-1.5"} ${className}`}>
       {(expanded ? shown : shown.slice(0, limit)).map(({ item, index }) => (
-        <li key={index} className={`flex items-start gap-2.5 ${text}`}>
-          {canCheck(item) ? (
+        <li
+          key={index}
+          className={
+            canCheck(item)
+              ? `flex items-start gap-2.5 ${text}`
+              : // A heading, which the goal pages are laid out under: it names
+                // the lines beneath it rather than sitting among them.
+                "pt-2 first:pt-0"
+          }
+        >
+          {!canCheck(item) ? (
+            <span
+              className={`block font-semibold tracking-[0.1em] text-faint uppercase ${
+                size === "sm" ? "text-[10px]" : "text-[11px]"
+              }`}
+            >
+              {item.text}
+            </span>
+          ) : (
             <button
               onClick={(e) => {
                 // These sit inside cards that are themselves links.
@@ -101,23 +118,16 @@ export function OutlineList({
             >
               <Check size={size === "sm" ? 11 : 12} />
             </button>
-          ) : (
-            // A heading or a quote is not a goal, so it gets no box — and no
-            // bullet either. It keeps the text column's indent and reads as
-            // the label it is, so every dot on a card is something to tick.
-            <span aria-hidden className={`${box} shrink-0`} />
           )}
-          <span
-            className={`min-w-0 flex-1 ${expanded ? "break-words" : "truncate"} ${
-              item.done
-                ? "text-faint line-through"
-                : canCheck(item)
-                  ? "text-muted"
-                  : "font-medium text-faint"
-            }`}
-          >
-            {item.text}
-          </span>
+          {canCheck(item) && (
+            <span
+              className={`min-w-0 flex-1 ${expanded ? "break-words" : "truncate"} ${
+                item.done ? "text-faint line-through" : "text-muted"
+              }`}
+            >
+              {item.text}
+            </span>
+          )}
         </li>
       ))}
       {shown.length > limit && (
