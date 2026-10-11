@@ -4,26 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  CalendarCheck,
-  CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CalendarRange,
-  Compass,
-  Flag,
-  Home,
-  LayoutGrid,
-  BellRing,
-  NotebookPen,
   Pencil,
   Plus,
-  Repeat,
   Settings,
-  Sofa,
-  Sparkles,
-  Target,
   X,
 } from "lucide-react";
 import { MONTHS } from "@/lib/seed";
@@ -42,39 +29,35 @@ import { SettingsPanel } from "./SettingsPanel";
 const MENUS = [
   {
     label: "Overview",
-    icon: LayoutGrid,
     items: [
-      { href: "/", label: "Overview", icon: LayoutGrid },
-      { href: "/life", label: "Life Plan", icon: Sparkles },
-      { href: "/map", label: "Life Categories", icon: Compass },
-      { href: "/weeks", label: "Weeks", icon: CalendarRange },
+      { href: "/", label: "Overview" },
+      { href: "/life", label: "Life Plan" },
+      { href: "/map", label: "Life Categories" },
+      { href: "/weeks", label: "Weeks" },
     ],
   },
   {
     label: "General Goals",
-    icon: Target,
     items: [
-      { href: "/goals", label: "Life Goals", icon: Flag },
-      { href: "/week", label: "Weekly Goals", icon: CalendarCheck },
-      { href: "/month", label: "Monthly Goals", icon: CalendarDays },
-      { href: "/year", label: "Yearly Goals", icon: Target },
+      { href: "/goals", label: "Life Goals" },
+      { href: "/week", label: "Weekly Goals" },
+      { href: "/month", label: "Monthly Goals" },
+      { href: "/year", label: "Yearly Goals" },
     ],
   },
   {
     label: "Specific Goals",
-    icon: Home,
     items: [
-      { href: "/house", label: "House Plan", icon: Home },
-      { href: "/rooms", label: "Marin Room", icon: Sofa },
+      { href: "/house", label: "House Plan" },
+      { href: "/rooms", label: "Marin Room" },
     ],
   },
   {
     label: "Notes",
-    icon: NotebookPen,
     items: [
-      { href: "/notes", label: "Notes", icon: NotebookPen },
-      { href: "/reminders", label: "Reminders", icon: BellRing },
-      { href: "/weekly", label: "Every Week", icon: Repeat },
+      { href: "/notes", label: "Notes" },
+      { href: "/reminders", label: "Reminders" },
+      { href: "/weekly", label: "Every Week" },
     ],
   },
 ];
@@ -86,6 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [showSettings, setShowSettings] = useState(false);
   const [editingTabs, setEditingTabs] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [anchor, setAnchor] = useState(0);
   const bar = useRef<HTMLElement>(null);
   const tray = useRef<HTMLDivElement>(null);
 
@@ -170,7 +154,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="flex flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {editingTabs &&
-            shown.map(({ href, label, icon: Icon }) => (
+            shown.map(({ href, label }) => (
               <span
                 key={href}
                 draggable
@@ -202,7 +186,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   <ChevronLeft size={13} />
                 </button>
-                <Icon size={16} className="shrink-0" />
                 {label}
                 <button
                   onClick={() => nudge(href, 1)}
@@ -222,13 +205,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
 
           {editingTabs &&
-            off.map(({ href, label, icon: Icon }) => (
+            off.map(({ href, label }) => (
               <button
                 key={href}
                 onClick={() => show(href)}
                 className="flex shrink-0 items-center gap-2 rounded-xl border border-dashed border-edge2 px-3 py-2 text-sm font-medium whitespace-nowrap text-faint transition hover:text-fg"
               >
-                <Icon size={16} className="shrink-0" />
                 {label}
                 <Plus size={13} className="-mr-1" />
               </button>
@@ -248,12 +230,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               if (!items.length) return null;
               const here = items.find((item) => item.href === current);
               const open = openMenu === menu.label;
-              const Icon = menu.icon;
 
               return (
                 <button
                   key={menu.label}
-                  onClick={() => setOpenMenu(open ? null : menu.label)}
+                  onClick={(e) => {
+                    // Where the panel lines up on a wide screen: the menu's
+                    // own edge, less the tray's padding.
+                    setAnchor(Math.max(0, e.currentTarget.getBoundingClientRect().left - 20));
+                    setOpenMenu(open ? null : menu.label);
+                  }}
                   aria-expanded={open}
                   aria-haspopup="menu"
                   className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition ${
@@ -264,7 +250,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         : "text-muted hover:bg-surface hover:text-fg"
                   }`}
                 >
-                  <Icon size={16} className="shrink-0" />
                   {menu.label}
                   {here && !open && <span className="text-accentink/70">— {here.label}</span>}
                   <ChevronDown
@@ -307,12 +292,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           role="menu"
           className="pane shrink-0 border-b border-edge bg-sheet px-3 py-2 shadow-lg sm:px-5"
         >
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div
+            style={{ "--anchor": `${anchor}px` } as React.CSSProperties}
+            className="flex w-full flex-col gap-1 sm:ml-[min(var(--anchor),calc(100%-17rem))] sm:w-64"
+          >
             {shown
               .filter((tab) =>
                 MENUS.find((m) => m.label === openMenu)?.items.some((i) => i.href === tab.href),
               )
-              .map(({ href, label, icon: ItemIcon }) => {
+              .map(({ href, label }) => {
                 const active = current === href;
                 return (
                   <Link
@@ -324,13 +312,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       if (active) goHome(href);
                       setOpenMenu(null);
                     }}
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm whitespace-nowrap transition ${
+                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${
                       active
                         ? "border-transparent bg-accentsoft font-medium text-accentink"
                         : "border-edge bg-surface text-muted hover:bg-surface2 hover:text-fg"
                     }`}
                   >
-                    <ItemIcon size={15} className="shrink-0" />
                     {label}
                     {dated[href] && (
                       <span className={active ? "text-accentink/70" : "text-faint"}>
