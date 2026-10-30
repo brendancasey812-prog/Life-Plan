@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -15,6 +15,7 @@ import {
   History,
   ImageIcon,
   NotebookPen,
+  PenLine,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -38,6 +39,7 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
   lastYearGoals: { label: "Last year", hint: "The year before that one", icon: History },
   lastMonthGoals: { label: "Last month", hint: "The month before that one", icon: History },
   weekGoals: { label: "Weekly goals", hint: "The week you are on", icon: CalendarRange },
+  scratch: { label: "Notepad", hint: "Somewhere to write a thing down", icon: PenLine },
   weeklyGoals: {
     label: "Every week",
     hint: "The standing list, every week",
@@ -51,7 +53,7 @@ export const WIDGETS: Record<WidgetKind, { label: string; hint: string; icon: ty
   reminders: { label: "Reminders", hint: "What is due, soonest first", icon: BellRing },
 };
 
-export function WidgetBody({ kind }: { kind: WidgetKind }) {
+export function WidgetBody({ kind, id }: { kind: WidgetKind; id: string }) {
   switch (kind) {
     case "age":
       return <AgeWidget />;
@@ -67,6 +69,8 @@ export function WidgetBody({ kind }: { kind: WidgetKind }) {
       return <GoalWidget scope="month" shift={-1} />;
     case "weekGoals":
       return <WeekGoalsWidget />;
+    case "scratch":
+      return <ScratchWidget id={id} />;
     case "weeklyGoals":
       return <WeeklyGoals />;
     case "lifeGoals":
@@ -328,6 +332,46 @@ function WeekGoalsWidget() {
           <ImageIcon size={13} /> {meta.images} picture{meta.images === 1 ? "" : "s"}
         </span>
       )}
+    </div>
+  );
+}
+
+/**
+ * Somewhere to write a thing down without deciding where it belongs. Plain
+ * text, kept with the card rather than as a page, so a board can carry as
+ * many as it likes and each holds its own.
+ */
+function ScratchWidget({ id }: { id: string }) {
+  const saved = usePlan((s) => s.scratch[id] ?? "");
+  const setScratch = usePlan((s) => s.setScratch);
+  const [text, setText] = useState(saved);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Typed into here, saved a beat later, and flushed if the card goes away
+  // mid-sentence.
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  const onChange = (next: string) => {
+    setText(next);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setScratch(id, next), 400);
+  };
+
+  return (
+    <div className="flex h-full flex-col">
+      <span className="text-base font-medium">Notepad</span>
+      <textarea
+        value={text}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => setScratch(id, text)}
+        placeholder="Write it down…"
+        aria-label="Notepad"
+        className="mt-2 min-h-[6rem] w-full flex-1 resize-none bg-transparent text-base text-muted outline-none placeholder:text-faint"
+      />
     </div>
   );
 }

@@ -78,6 +78,7 @@ export type WidgetKind =
   | "lastYearGoals"
   | "lastMonthGoals"
   | "weekGoals"
+  | "scratch"
   | "weeklyGoals"
   | "lifeGoals"
   | "bubbles"
@@ -221,6 +222,8 @@ export interface PlanState {
   notes: Record<string, NoteMeta>;
   /** The entry tab's layout, in the order the cards appear. */
   widgets: Widget[];
+  /** What is written on each notepad card, by that card's id. */
+  scratch: Record<string, string>;
   /** Grid pages, keyed the way note pages are. */
   blueprints: Record<string, Blueprint>;
   /** The long horizon: what should be true by when. */

@@ -88,6 +88,7 @@ export function defaultWidgets(): Widget[] {
     // A row of four: the day, what is due, and the week ahead.
     ["date", 1],
     ["reminders", 2],
+    ["scratch", 2],
     ["weeks", 1],
     ["weeklyGoals", 2],
     ["lifeGoals", 2],
@@ -144,6 +145,8 @@ interface Actions {
   /** Shifts a card one slot back or forward, for boards without a mouse. */
   nudgeWidget: (id: string, delta: -1 | 1) => void;
   resetWidgets: () => void;
+  /** What is written on a notepad card. */
+  setScratch: (id: string, text: string) => void;
   /** Starts a grid page on a bubble, or replaces the one it has. */
   setBlueprint: (key: string, blueprint: Blueprint | null) => void;
   addPart: (key: string, part?: Partial<BlueprintPart>) => void;
@@ -184,6 +187,7 @@ function emptyState(): PlanState {
     pages: [],
     reminders: [],
     notes: {},
+    scratch: {},
     blueprints: {},
     widgets: defaultWidgets(),
     goals: defaultGoals(),
@@ -557,6 +561,14 @@ export const usePlan = create<PlanStore>()(
 
       resetWidgets: () => set({ widgets: defaultWidgets() }),
 
+      setScratch: (id, text) =>
+        set((s) => {
+          const scratch = { ...s.scratch };
+          if (text) scratch[id] = text;
+          else delete scratch[id];
+          return { scratch };
+        }),
+
       setBlueprint: (key, blueprint) =>
         set((s) => {
           const blueprints = { ...s.blueprints };
@@ -623,7 +635,7 @@ export const usePlan = create<PlanStore>()(
     }),
     {
       name: "life-plan-v1",
-      version: 18,
+      version: 19,
       partialize: (s): PlanState => ({
         settings: s.settings,
         focus: s.focus,
@@ -632,6 +644,7 @@ export const usePlan = create<PlanStore>()(
         pages: s.pages,
         reminders: s.reminders,
         notes: s.notes,
+        scratch: s.scratch,
         blueprints: s.blueprints,
         widgets: s.widgets,
         goals: s.goals,
@@ -818,6 +831,19 @@ export const usePlan = create<PlanStore>()(
           state.widgets = widgets;
         }
 
+        // Somewhere on the board to write a thing down.
+        state.scratch ??= {};
+        if (!state.widgets.some((w) => w.kind === "scratch")) {
+          const widgets = [...state.widgets];
+          const at = widgets.findIndex((w) => w.kind === "reminders");
+          widgets.splice(at < 0 ? widgets.length : at + 1, 0, {
+            id: newId("w"),
+            kind: "scratch",
+            span: 2,
+          });
+          state.widgets = widgets;
+        }
+
         // The index gained per-line content, then each line's ticked state,
         // then whether each line can carry a box at all, and later room for
         // more lines of a page than a card shows at once. Rebuild every meta
@@ -908,6 +934,7 @@ export function exportable(s: PlanState): PlanState {
     pages: s.pages,
     reminders: s.reminders,
     notes: s.notes,
+    scratch: s.scratch,
     blueprints: s.blueprints,
     widgets: s.widgets,
     goals: s.goals,
@@ -928,6 +955,7 @@ export function parsePlan(text: string): (PlanState & { noteBodies?: unknown }) 
       pages: data.pages ?? [],
       reminders: data.reminders ?? [],
       notes: data.notes ?? {},
+      scratch: data.scratch ?? {},
       blueprints: data.blueprints ?? {},
       widgets: data.widgets?.length ? data.widgets : defaultWidgets(),
       goals: data.goals ?? defaultGoals(),

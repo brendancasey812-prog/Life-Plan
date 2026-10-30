@@ -199,7 +199,7 @@ function WidgetCard({
     >
       {/* Pointer events are off in edit mode so a drag never fires a link. */}
       <div className={editing ? "pointer-events-none" : undefined}>
-        <WidgetBody kind={widget.kind} />
+        <WidgetBody kind={widget.kind} id={widget.id} />
       </div>
 
       {editing && (
